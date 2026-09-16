@@ -105,8 +105,9 @@ PYEOF
   echo ">> Python stub 已生成: sdks/python/src/notifyhub"
 }
 
-PROTOC_GEN_GO_VERSION=1.36.5
-PROTOC_GEN_GO_GRPC_VERSION=1.5.1
+# go install 的 @version 必须带 v 前缀，否则被当成 commit revision（报 unknown revision）
+PROTOC_GEN_GO_VERSION=v1.36.5
+PROTOC_GEN_GO_GRPC_VERSION=v1.5.1
 
 # 插件可执行文件后缀（windows 为 .exe）
 goplugin_ext() { [ "$PROTOC_OS" = "windows-x86_64" ] && echo ".exe" || echo ""; }
