@@ -1,5 +1,7 @@
 # NotifyHub Linux 发行包
 
+> English: [README.en.md](README.en.md)
+
 自带 JRE 21 的绿色发行包：解压即用，不依赖系统 Java。
 
 ## 目录结构

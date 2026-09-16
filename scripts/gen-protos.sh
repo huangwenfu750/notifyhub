@@ -44,6 +44,14 @@ else
   W() { printf '%s' "$1"; }
 fi
 
+# proto 相对路径的分隔符必须跟宿主一致：Windows 原生 protoc 只认反斜杠，
+# 而 Linux/macOS 上传反斜杠会被当成文件名的一部分（报 "Could not make proto path relative"）。
+if [ "$PROTOC_OS" = "windows-x86_64" ]; then
+  PS='\'; PROTO_REL='notify\v1\notify.proto'
+else
+  PS='/'; PROTO_REL='notify/v1/notify.proto'
+fi
+
 gen_java() {
   local PLUGIN="$TOOLS/protoc-gen-grpc-java.exe"
   [ "$PROTOC_OS" != "windows-x86_64" ] && PLUGIN="$TOOLS/protoc-gen-grpc-java"
@@ -64,7 +72,7 @@ gen_java() {
   "$PROTOC" -I "$WIN" \
     --plugin=protoc-gen-grpc-java="$(W "$PLUGIN")" \
     --java_out="$WOUT" --grpc-java_out="$WOUT" \
-    "$WIN\\notify\\v1\\notify.proto"
+    "$WIN${PS}$PROTO_REL"
   echo ">> Java stub 已生成: protos/src/main/java"
 }
 
@@ -77,7 +85,7 @@ gen_python() {
   WOUT="$(W "$OUT")"; WIN="$(W "$PROTO_DIR")"
   python -m grpc_tools.protoc -I "$WIN" \
     --python_out="$WOUT" --grpc_python_out="$WOUT" \
-    "$WIN\\notify\\v1\\notify.proto"
+    "$WIN${PS}$PROTO_REL"
   # 生成的绝对导入 notify.v1 改写为包内导入 notifyhub.notify.v1
   python - "$WOUT" <<'PYEOF'
 import sys, pathlib
@@ -145,7 +153,7 @@ gen_go() {
     --plugin=protoc-gen-go="$PLUG1" --plugin=protoc-gen-go-grpc="$PLUG2" \
     --go_out="$WOUT" --go_opt=module=github.com/notifyhub/notifyhub-sdk-go/gen \
     --go-grpc_out="$WOUT" --go-grpc_opt=module=github.com/notifyhub/notifyhub-sdk-go/gen \
-    "$WIN\\notify\\v1\\notify.proto"
+    "$WIN${PS}$PROTO_REL"
   echo ">> Go stub 已生成: sdks/go/gen"
 }
 

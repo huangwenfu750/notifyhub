@@ -125,6 +125,9 @@ def build_stage():
                 os.path.join(stage, "etc", "notifyhub.example.yaml"))
     shutil.copy(os.path.join(ROOT, "README.md"),
                 os.path.join(stage, "share", "doc", "README.project.md"))
+    if os.path.isfile(os.path.join(ROOT, "README.en.md")):
+        shutil.copy(os.path.join(ROOT, "README.en.md"),
+                    os.path.join(stage, "share", "doc", "README.project.en.md"))
     shutil.copy(os.path.join(ROOT, "LICENSE"),
                 os.path.join(stage, "share", "doc", "LICENSE"))
 

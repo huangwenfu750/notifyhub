@@ -67,7 +67,7 @@ publishing {
             pom {
                 name.set("NotifyHub Spring Boot Starter")
                 description.set("NotifyHub 多语言通知推送服务 - Spring Boot 自动配置")
-                url.set("https://github.com/notifyhub/notifyhub")
+                url.set("https://github.com/huangwenfu750/notifyhub")
             }
         }
     }

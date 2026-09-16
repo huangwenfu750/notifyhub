@@ -1,5 +1,7 @@
 # Spring Boot 示例工程
 
+> English: [README.en.md](README.en.md)
+
 最小可运行的 Spring Boot 应用：演示「`application.yml` 配置 → 注入 `NotifyHubTemplate` → 发布 / 收事件 / 去重」。
 
 这是一个**独立的 Gradle 工程**（有自己的 `settings.gradle.kts`），不参与根工程的构建。

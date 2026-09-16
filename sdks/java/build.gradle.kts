@@ -56,7 +56,7 @@ publishing {
             pom {
                 name.set("NotifyHub Java SDK")
                 description.set("NotifyHub 多语言通知推送服务 - Java 客户端")
-                url.set("https://github.com/notifyhub/notifyhub")
+                url.set("https://github.com/huangwenfu750/notifyhub")
             }
         }
     }

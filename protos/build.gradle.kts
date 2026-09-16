@@ -35,7 +35,7 @@ publishing {
             pom {
                 name.set("NotifyHub protos")
                 description.set("NotifyHub gRPC 生成代码（proto 契约的 Java stub）")
-                url.set("https://github.com/notifyhub/notifyhub")
+                url.set("https://github.com/huangwenfu750/notifyhub")
             }
         }
     }
