@@ -1,0 +1,60 @@
+# NotifyHub 服务端配置示例
+# 复制为 config.yaml 后按需修改；路径可通过 --config 或环境变量 NOTIFYHUB_CONFIG 指定。
+
+server:
+  host: 0.0.0.0
+  port: 9987
+  # 投递 worker 线程数（默认 = CPU 核数，最小 4）
+  workers: 16
+  # 异步投递队列容量；打满时 Publish 返回 UNAVAILABLE
+  queue_capacity: 10000
+
+# API token 白名单；为空数组 [] 表示不鉴权
+auth:
+  tokens:
+    - ntf_change_me_0123456789
+
+# 全局默认值（各平台可覆盖）
+defaults:
+  retry:
+    max_attempts: 3      # 含首次，共尝试次数
+    backoff_ms: 500      # 首次退避基数，指数增长 + 随机抖动，上限 30s
+  rate_limit:
+    qps: 15              # 每平台令牌桶（钉钉官方限 20 qps）
+  dedup_window_ms: 60000 # dedup_key 去重窗口
+
+# 推送平台列表；topics 支持通配符：* 匹配一段，# 匹配零或多段（. 分隔）
+platforms:
+  # 钉钉自定义机器人（加签）
+  - name: dingtalk-alert
+    type: dingtalk
+    webhook: https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxx
+    secret: SECxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    topics: ["alert", "ops.*"]
+    template: "**{{title}}**\n{{content}}"   # 可选；占位符 {{title}} {{content}} {{topic}} {{params.xxx}}
+    at_mobiles: ["13800000000"]              # 可选；@手机号
+    retry: { max_attempts: 5, backoff_ms: 200 }
+    rate_limit_qps: 10
+
+  # 企业微信群机器人（key 已含在 URL，无加签）
+  - name: wecom-ops
+    type: wecom
+    webhook: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxxxxxxx
+    topics: ["ops.#"]
+
+  # 飞书自定义机器人（加签）
+  - name: feishu-dev
+    type: feishu
+    webhook: https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxxxx
+    secret: xxxxxxxxxxxxxxxx
+    topics: ["alert.*", "deploy"]
+
+  # 通用 Webhook（兜底渠道，可对接任意平台）
+  # 请求体: {event_id, topic, title, content, params, timestamp}
+  # 配置 secret 后自动携带签名头 hex(HmacSHA256(secret, body))
+  - name: generic-hook
+    type: webhook
+    url: https://example.com/hook
+    secret: my-webhook-secret
+    sign_header: X-Signature
+    topics: ["*"]

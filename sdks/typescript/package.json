@@ -1,0 +1,23 @@
+{
+  "name": "@notifyhub/client",
+  "version": "0.1.0",
+  "description": "NotifyHub 多语言通知推送服务 - TypeScript/JavaScript 客户端",
+  "main": "dist/client.js",
+  "types": "dist/client.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "example:publish": "node examples/publish.js",
+    "example:subscribe": "node examples/subscribe.js"
+  },
+  "keywords": ["notifyhub", "notification", "grpc", "dingtalk", "wecom", "feishu", "webhook"],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.10.0",
+    "@grpc/proto-loader": "^0.7.12"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^20.14.0"
+  }
+}

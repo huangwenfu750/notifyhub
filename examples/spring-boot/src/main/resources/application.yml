@@ -1,0 +1,35 @@
+server:
+  port: 8080
+
+notifyhub:
+  host: 127.0.0.1
+  port: 9987
+  token: ntf_smoke_token          # 与 smoke/config.yaml 一致
+  fail-fast: false
+
+  # 启动时用 Admin RPC 注册一个 webhook 平台（打到本地回显服务）
+  platforms:
+    - name: demo-hook
+      type: webhook
+      webhook: http://127.0.0.1:19800/hook
+      secret: smoke-secret
+      topics: [demo.*]
+
+  # 启动即订阅，事件以 Spring ApplicationEvent 广播
+  subscriber:
+    enabled: true
+    topics: [demo.*]
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    io.notifyhub.spring: INFO
+    com.example.notifyhub: INFO

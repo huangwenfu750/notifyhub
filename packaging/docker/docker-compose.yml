@@ -1,0 +1,22 @@
+services:
+  notifyhub:
+    build:
+      context: .
+      args:
+        DIST_FILE: notifyhub-0.1.0-linux-x86_64-nojre.tar.gz
+    image: notifyhub:0.1.0
+    container_name: notifyhub
+    ports:
+      - "9987:9987"
+    environment:
+      NOTIFYHUB_CONFIG: /etc/notifyhub/config.yaml
+      NOTIFYHUB_JAVA_OPTS: "-Xms64m -Xmx256m -XX:+UseG1GC"
+    volumes:
+      # 先把 config.example.yaml 复制为 config.yaml 并填好 token / 平台
+      - ./config.yaml:/etc/notifyhub/config.yaml:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/9987' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

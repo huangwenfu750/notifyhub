@@ -1,0 +1,19 @@
+# 烟雾测试配置（跨进程端到端验证用）
+server:
+  host: 127.0.0.1
+  port: 9987
+
+auth:
+  tokens:
+    - ntf_smoke_token
+
+defaults:
+  retry: { max_attempts: 3, backoff_ms: 100 }
+  rate_limit: { qps: 50 }
+
+platforms:
+  - name: smoke-hook
+    type: webhook
+    url: http://127.0.0.1:19800/hook
+    secret: smoke-secret
+    topics: ["smoke.*"]

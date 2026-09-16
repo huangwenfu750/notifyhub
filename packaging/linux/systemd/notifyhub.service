@@ -1,0 +1,35 @@
+[Unit]
+Description=NotifyHub - 多语言通知推送服务 (gRPC)
+Documentation=https://github.com/notifyhub/notifyhub
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=notifyhub
+Group=notifyhub
+Environment=NOTIFYHUB_CONFIG=/etc/notifyhub/notifyhub.yaml
+Environment=NOTIFYHUB_LOG_DIR=/var/log/notifyhub
+Environment=NOTIFYHUB_PID_FILE=/run/notifyhub/notifyhub.pid
+ExecStart=/opt/notifyhub/bin/notifyhub
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=30
+WorkingDirectory=/opt/notifyhub
+StandardOutput=append:/var/log/notifyhub/notifyhub.log
+StandardError=append:/var/log/notifyhub/notifyhub.log
+
+# 安全加固（systemd 249+ 支持，旧版本会忽略未知选项）
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

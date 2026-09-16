@@ -1,0 +1,58 @@
+# NotifyHub 服务端配置（默认读取路径 /etc/notifyhub/notifyhub.yaml）
+# 修改后重启生效：systemctl restart notifyhub
+
+server:
+  host: 0.0.0.0
+  port: 9987
+  workers: 4              # 投递线程数（默认 = CPU 核数，最小 4）
+  queue_capacity: 10000   # 异步投递队列容量；打满时 Publish 返回 UNAVAILABLE
+
+# API token 白名单；客户端通过 gRPC header x-api-token 携带
+# 上线前请替换成自己的随机 token（openssl rand -hex 24）
+auth:
+  tokens:
+    - ntf_change_me_0123456789
+
+# 全局默认值（各平台可覆盖）
+defaults:
+  retry:
+    max_attempts: 3
+    backoff_ms: 500
+  rate_limit:
+    qps: 15
+  dedup_window_ms: 60000
+
+# 推送平台；topics 支持通配符：* 匹配一段，# 匹配零或多段（以 . 分隔）
+# 开箱默认不配置任何平台（publish 只广播给订阅者，不做外部投递）。
+# 下面四个示例取消注释并填入真实 webhook/secret 即可启用。
+
+platforms: []
+
+# platforms:
+#   - name: dingtalk-alert          # 钉钉自定义机器人（加签）
+#     type: dingtalk
+#     webhook: https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxx
+#     secret: SECxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#     topics: ["alert", "ops.*"]
+#     template: "**{{title}}**\n{{content}}"
+#     at_mobiles: ["13800000000"]
+#     retry: { max_attempts: 5, backoff_ms: 200 }
+#     rate_limit_qps: 10
+#
+#   - name: wecom-ops               # 企业微信群机器人（key 在 URL 中，无加签）
+#     type: wecom
+#     webhook: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxxxxxxx
+#     topics: ["ops.#"]
+#
+#   - name: feishu-dev              # 飞书自定义机器人（加签）
+#     type: feishu
+#     webhook: https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxxxx
+#     secret: xxxxxxxxxxxxxxxx
+#     topics: ["alert.*", "deploy"]
+#
+#   - name: generic-hook            # 通用 Webhook（可对接任意系统）
+#     type: webhook
+#     url: https://example.com/hook
+#     secret: my-webhook-secret     # 配置后自动带签名头 hex(HmacSHA256(secret, body))
+#     sign_header: X-Signature
+#     topics: ["*"]

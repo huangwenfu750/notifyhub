@@ -1,0 +1,38 @@
+# Gradle
+.gradle/
+build/
+
+# 代码生成工具二进制（由 scripts/gen-protos.sh 下载）
+tools/
+
+# Node
+node_modules/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+
+# Go
+sdks/go/gen/
+# go build 会在包目录留下可执行文件
+smoke/go/*.exe
+smoke/go/smoke-go
+
+# IDE / 系统
+.idea/
+*.iml
+.vscode/
+Thumbs.db
+
+# 本地配置（含 token / webhook 密钥，不入库；smoke/config.yaml 是测试用，保留）
+/config.yaml
+/packaging/docker/config.yaml
+
+# WorkBuddy 工作区数据
+.workbuddy-ai/
+
+# 运行日志
+*.log

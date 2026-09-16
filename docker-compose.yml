@@ -1,0 +1,16 @@
+services:
+  notifyhub:
+    build: .
+    container_name: notifyhub
+    ports:
+      - "9987:9987"
+    volumes:
+      # 先 cp config.example.yaml config.yaml 并填好 auth.tokens / platforms，
+      # 再启动；缺失时 Docker 会把它当成目录创建，导致启动失败。
+      - ./config.yaml:/etc/notifyhub/config.yaml:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 3 bash -c '</dev/tcp/127.0.0.1/9987' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

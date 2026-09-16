@@ -1,0 +1,121 @@
+#!/bin/sh
+# NotifyHub 启动器 (POSIX sh, Linux/BSD 通用)
+#
+#   notifyhub                     前台运行（默认配置 etc/notifyhub.yaml）
+#   notifyhub --config <file>     指定配置文件
+#   notifyhub start|stop|restart|status   守护进程模式
+#   notifyhub --version
+#
+# 环境变量:
+#   NOTIFYHUB_CONFIG   配置文件路径
+#   NOTIFYHUB_OPTS     额外 JVM 参数（追加在默认参数之后）
+#   JAVA_HOME          未内置 JRE 时使用
+set -u
+
+APP_NAME=notifyhub
+APP_HOME=$(cd "$(dirname "$0")/.." && pwd)
+LIB_DIR="$APP_HOME/lib"
+CONF_FILE="${NOTIFYHUB_CONFIG:-$APP_HOME/etc/notifyhub.yaml}"
+LOG_DIR="${NOTIFYHUB_LOG_DIR:-$APP_HOME/var/log}"
+PID_FILE="${NOTIFYHUB_PID_FILE:-$APP_HOME/var/run/notifyhub.pid}"
+STDOUT_LOG="$LOG_DIR/notifyhub.log"
+
+# ---- 选择 JRE：内置 > JAVA_HOME > PATH ----
+if [ -x "$APP_HOME/jre/bin/java" ]; then
+    JAVA="$APP_HOME/jre/bin/java"
+elif [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/java" ]; then
+    JAVA="$JAVA_HOME/bin/java"
+else
+    JAVA=$(command -v java 2>/dev/null || true)
+fi
+if [ -z "${JAVA:-}" ]; then
+    echo "notifyhub: 未找到 java。请安装 JRE 21+ 或设置 JAVA_HOME。" >&2
+    exit 1
+fi
+
+# ---- JVM 参数：小内存机器友好，可用 NOTIFYHUB_OPTS 覆盖/追加 ----
+DEFAULT_OPTS="-Xms64m -Xmx256m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError \
+-Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true -Dio.netty.leakDetection.level=disabled"
+JAVA_OPTS="${NOTIFYHUB_JAVA_OPTS:-$DEFAULT_OPTS} ${NOTIFYHUB_OPTS:-}"
+
+CLASSPATH="$LIB_DIR/*"
+
+is_running() {
+    [ -f "$PID_FILE" ] || return 1
+    pid=$(cat "$PID_FILE" 2>/dev/null)
+    [ -n "${pid:-}" ] || return 1
+    kill -0 "$pid" 2>/dev/null
+}
+
+do_start_daemon() {
+    mkdir -p "$LOG_DIR" "$(dirname "$PID_FILE")"
+    if is_running; then
+        echo "notifyhub: 已在运行 (pid $(cat "$PID_FILE"))"
+        return 0
+    fi
+    nohup "$JAVA" $JAVA_OPTS -cp "$CLASSPATH" io.notifyhub.Main --config "$CONF_FILE" \
+        >>"$STDOUT_LOG" 2>&1 &
+    echo $! >"$PID_FILE"
+    sleep 1
+    if is_running; then
+        echo "notifyhub: 已启动 (pid $(cat "$PID_FILE"))，日志 $STDOUT_LOG"
+    else
+        echo "notifyhub: 启动失败，请查看 $STDOUT_LOG" >&2
+        rm -f "$PID_FILE"
+        return 1
+    fi
+}
+
+do_stop() {
+    if ! is_running; then
+        echo "notifyhub: 未运行"
+        rm -f "$PID_FILE"
+        return 0
+    fi
+    pid=$(cat "$PID_FILE")
+    kill "$pid" 2>/dev/null
+    i=0
+    while is_running && [ $i -lt 30 ]; do
+        sleep 1
+        i=$((i + 1))
+    done
+    if is_running; then
+        echo "notifyhub: 优雅停止超时，强制 kill"
+        kill -9 "$pid" 2>/dev/null
+    fi
+    rm -f "$PID_FILE"
+    echo "notifyhub: 已停止"
+}
+
+do_status() {
+    if is_running; then
+        echo "notifyhub: 运行中 (pid $(cat "$PID_FILE"))"
+        return 0
+    fi
+    echo "notifyhub: 已停止"
+    return 3
+}
+
+case "${1:-}" in
+    start)   do_start_daemon ;;
+    stop)    do_stop ;;
+    restart) do_stop; do_start_daemon ;;
+    status)  do_status ;;
+    --help|-h)
+        sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+        ;;
+    *)
+        # 其余参数原样透传给 Main；未显式指定 --config/-c 时补上默认配置文件
+        has_cfg=0
+        for a in "$@"; do
+            case "$a" in
+                --config|-c) has_cfg=1 ;;
+            esac
+        done
+        if [ "$has_cfg" -eq 0 ]; then
+            exec "$JAVA" $JAVA_OPTS -cp "$CLASSPATH" io.notifyhub.Main --config "$CONF_FILE" "$@"
+        else
+            exec "$JAVA" $JAVA_OPTS -cp "$CLASSPATH" io.notifyhub.Main "$@"
+        fi
+        ;;
+esac

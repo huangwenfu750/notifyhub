@@ -1,0 +1,32 @@
+# 只保留服务端构建所需：settings.gradle.kts / gradle.properties / proto / protos / server / sdks/java
+# 其余（node_modules、各模块 build 产物、示例、脚本、文档）全部排除，避免把几百 MB 塞进构建上下文。
+
+# 版本控制与 IDE
+.git/
+.github/
+.idea/
+.vscode/
+
+# 构建产物（根目录与各模块）
+build/
+server/build/
+protos/build/
+sdks/java/build/
+sdks/python/build/
+sdks/typescript/dist/
+sdks/spring-boot/build/
+examples/spring-boot/build/
+
+# 与服务端构建无关的代码
+sdks/python/
+sdks/typescript/
+sdks/go/
+examples/
+smoke/
+docs/
+scripts/
+tools/
+.venv/
+
+# 杂项
+*.log

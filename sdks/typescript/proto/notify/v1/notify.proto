@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package notify.v1;
+
+option java_multiple_files = true;
+option java_package = "io.notifyhub.v1";
+option java_outer_classname = "NotifyProto";
+option go_package = "github.com/notifyhub/notifyhub-sdk-go/gen/notify/v1;notifyv1";
+
+// NotifyHub —— 多语言通知推送服务。
+// 本文件是唯一契约：服务端将来重写（Go/Rust/Zig）时不得变更既有字段的编号与语义。
+service Notify {
+  // 发布通知：按路由推送到外部平台 + 广播给在线订阅者。
+  rpc Publish(PublishRequest) returns (PublishAck);
+  // 订阅主题，服务端流式推送。
+  rpc Subscribe(SubscribeRequest) returns (stream Event);
+  // 批量发布（双向流：每收到一条请求，回执一条 Ack）。
+  rpc PublishStream(stream PublishRequest) returns (stream PublishAck);
+  // 用代码配置推送平台（运行时生效；重启后需重新注册，或写入配置文件）。
+  rpc UpsertPlatform(PlatformConfig) returns (PlatformConfig);
+  rpc ListPlatforms(Empty) returns (PlatformList);
+  rpc RemovePlatform(PlatformRef) returns (Empty);
+  // 健康检查（无需鉴权）。
+  rpc Ping(Empty) returns (Pong);
+}
+
+message Empty {}
+
+message Pong {
+  string version = 1;
+  int64 uptime_seconds = 2;
+}
+
+message Options {
+  // 去重键：窗口期内携带相同 key 的发布将不被投递（accepted=false, deduplicated=true）。
+  string dedup_key = 1;
+  bool skip_subscribers = 2; // 不广播给在线订阅者
+  bool skip_platforms = 3;   // 不推送到外部平台
+}
+
+message PublishRequest {
+  string topic = 1;
+  string title = 2;
+  string content = 3;
+  map<string, string> params = 4;
+  // 显式指定目标平台名（覆盖按 topic 的路由规则；平台不存在返回 NOT_FOUND）。
+  repeated string platforms = 5;
+  Options options = 6;
+}
+
+message PublishAck {
+  string event_id = 1;
+  bool accepted = 2;
+  bool deduplicated = 3;
+  repeated string matched_platforms = 4;
+  // accepted=false 时的原因（批量流中按条返回，不中断流）。
+  string error = 5;
+}
+
+message SubscribeRequest {
+  // 支持通配符：`*` 匹配一段，`#` 匹配零或多段（以 `.` 分隔），如 "alert.*"、"logs.#"。
+  repeated string topics = 1;
+}
+
+message Event {
+  string topic = 1;
+  string title = 2;
+  string content = 3;
+  map<string, string> params = 4;
+  string platform = 5;
+  string event_id = 6;
+  int64 timestamp = 7; // unix 毫秒
+}
+
+message PlatformConfig {
+  string name = 1;
+  // dingtalk | wecom | feishu | webhook
+  string type = 2;
+  string webhook = 3;
+  string secret = 4;
+  repeated string topics = 5;     // 路由规则，支持通配符
+  string template = 6;            // 渲染模板，占位符 {{title}} {{content}} {{params.xxx}}
+  repeated string at_mobiles = 7; // 钉钉 @ 手机号
+  map<string, string> extra = 8;  // 扩展配置（如 webhook 渠道的 sign_header）
+  RetryPolicy retry = 9;
+  int32 rate_limit_qps = 10;
+}
+
+message RetryPolicy {
+  int32 max_attempts = 1;
+  int64 backoff_ms = 2; // 首次退避基数，指数增长 + 随机抖动
+}
+
+message PlatformRef {
+  string name = 1;
+}
+
+message PlatformList {
+  repeated PlatformConfig platforms = 1;
+}
