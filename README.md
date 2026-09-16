@@ -124,6 +124,19 @@ client.upsert_platform(
 
 逐步上手手册见 [docs/usage.md](docs/usage.md)（Spring Boot 用户看第 5.5 节）。
 
+## 安装 SDK（包管理平台）
+
+| 语言 | 安装方式 | 说明 |
+|---|---|---|
+| TypeScript / JS | `npm i notifyhub-client` | npm / pnpm / yarn / bun 共用同一个 registry，发一次四者都能装 |
+| Python | `pip install notifyhub-client` | PyPI |
+| Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.0")` | Maven |
+| Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")` | Maven |
+| Go | `go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.0` | Go modules，靠 `sdks/go/v*` 标签分发 |
+
+服务端发行版在 [Releases](https://github.com/huangwenfu750/notifyhub/releases)：
+`notifyhub-<ver>-linux-x86_64.tar.gz`（自带 JRE 21，解压即用）与 `-nojre` 精简版，各带 `.sha256`。
+
 ## 构建与测试
 
 ```bash

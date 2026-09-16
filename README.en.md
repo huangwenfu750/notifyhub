@@ -125,6 +125,20 @@ Protocol and delivery semantics (including per-channel signature algorithms) are
 
 The step-by-step guide lives in [docs/usage.en.md](docs/usage.en.md) (Spring Boot users: section 5.5).
 
+## Install the SDKs (package registries)
+
+| Language | Install | Notes |
+|---|---|---|
+| TypeScript / JS | `npm i notifyhub-client` | npm / pnpm / yarn / bun share one registry — publishing once covers all four |
+| Python | `pip install notifyhub-client` | PyPI |
+| Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.0")` | Maven |
+| Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")` | Maven |
+| Go | `go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.0` | Go modules, distributed via `sdks/go/v*` tags |
+
+Server distributions are on the [Releases](https://github.com/huangwenfu750/notifyhub/releases) page:
+`notifyhub-<ver>-linux-x86_64.tar.gz` (bundles JRE 21, unpack and run) and the `-nojre` slim
+variant, each with a `.sha256`.
+
 ## Build & Test
 
 ```bash

@@ -1,0 +1,110 @@
+name: Publish
+
+# 发布各语言 SDK 到包管理平台，在 Release 发布后触发（也可手动跑）。
+#
+# npm / pnpm / yarn / bun 共用同一个 npm registry，下面这个 npm 任务发布一次即可让四者都能安装。
+#
+# 需要的仓库 Secrets（缺哪个就跳过哪个任务，不会让发布失败）：
+#   NPM_TOKEN           npmjs.com 的 Automations/Access Token
+#   PYPI_API_TOKEN      PyPI 的 API token（以 pypi- 开头）
+#   MAVEN_URL / MAVEN_USER / MAVEN_PASSWORD
+#                       其它 Maven 仓库（如 Maven Central 的 OSSRH staging 地址）
+#   MAVEN_SIGNING_KEY   GPG 私钥（Maven Central 强制要求）
+# GitHub Packages 用内置的 GITHUB_TOKEN，无需额外配置。
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  npm:
+    name: npm (npmjs.com)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 构建
+        run: cd sdks/typescript && npm install && npm run build
+      - name: 发布
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "::warning::未配置 NPM_TOKEN，跳过 npm 发布"
+            exit 0
+          fi
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
+          cd sdks/typescript && npm publish --access public
+
+  pypi:
+    name: PyPI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 构建 sdist + wheel
+        run: |
+          python -m pip install --upgrade build twine
+          cd sdks/python && python -m build
+      - name: 上传
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          if [ -z "$TWINE_PASSWORD" ]; then
+            echo "::warning::未配置 PYPI_API_TOKEN，跳过 PyPI 发布"
+            exit 0
+          fi
+          twine upload --skip-existing sdks/python/dist/*
+
+  maven-github:
+    name: Maven (GitHub Packages)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+      - name: 生成 Java stub
+        run: bash scripts/gen-protos.sh java
+      - name: 发布到 GitHub Packages
+        env:
+          MAVEN_URL: https://maven.pkg.github.com/huangwenfu750/notifyhub
+          MAVEN_USER: ${{ github.actor }}
+          MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: gradle publishNotifyHub
+
+  maven-remote:
+    name: Maven (其它远端仓库)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+      - name: 生成 Java stub
+        run: bash scripts/gen-protos.sh java
+      - name: 发布
+        env:
+          MAVEN_URL: ${{ secrets.MAVEN_URL }}
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_SIGNING_KEY: ${{ secrets.MAVEN_SIGNING_KEY }}
+          MAVEN_SIGNING_PASSWORD: ${{ secrets.MAVEN_SIGNING_PASSWORD }}
+        run: |
+          if [ -z "$MAVEN_URL" ]; then
+            echo "::warning::未配置 MAVEN_URL，跳过远端 Maven 发布"
+            exit 0
+          fi
+          gradle publishNotifyHub
