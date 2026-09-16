@@ -24,6 +24,7 @@ import os
 import shutil
 import sys
 import tarfile
+import time
 import urllib.request
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -73,11 +74,26 @@ def ensure_jre():
     os.makedirs(WORK, exist_ok=True)
     if os.path.exists(JRE_TAR) and os.path.getsize(JRE_TAR) > 20 * 1024 * 1024:
         return
-    print(">> 下载 Temurin JRE 21 (linux x64) ...")
-    req = urllib.request.Request(JRE_URL, headers={"User-Agent": "notifyhub-packager"})
-    with urllib.request.urlopen(req, timeout=600) as r, open(JRE_TAR, "wb") as f:
-        shutil.copyfileobj(r, f)
-    print("   %.1f MB -> %s" % (os.path.getsize(JRE_TAR) / 1048576, JRE_TAR))
+    # 下载到临时文件再改名：中途失败不会留下半个 tar 让后续构建误判为"已下载"
+    tmp = JRE_TAR + ".part"
+    for attempt in range(1, 4):
+        try:
+            print(">> 下载 Temurin JRE 21 (linux x64) ... (第 %d 次)" % attempt)
+            req = urllib.request.Request(JRE_URL, headers={"User-Agent": "notifyhub-packager"})
+            with urllib.request.urlopen(req, timeout=600) as r, open(tmp, "wb") as f:
+                shutil.copyfileobj(r, f)
+            if os.path.getsize(tmp) < 20 * 1024 * 1024:
+                raise RuntimeError("下载不完整: %.1f MB" % (os.path.getsize(tmp) / 1048576))
+            os.replace(tmp, JRE_TAR)
+            print("   %.1f MB -> %s" % (os.path.getsize(JRE_TAR) / 1048576, JRE_TAR))
+            return
+        except Exception as e:
+            print("!! 下载失败: %s" % e)
+            if os.path.exists(tmp):
+                os.remove(tmp)
+            if attempt < 3:
+                time.sleep(5)
+    raise SystemExit("JRE 下载失败，已重试 3 次: %s" % JRE_URL)
 
 
 def build_stage():

@@ -16,6 +16,22 @@ GRPC_JAVA_VERSION=1.79.0
 TOOLS="$ROOT/tools"
 mkdir -p "$TOOLS"
 
+# 下载工具二进制。Maven Central 偶发 403（CDN/限流），CI 每次都要重下，所以必须能重试。
+# 不直接用 curl --retry：它默认只重试 5xx/超时，不覆盖 403。
+download() {
+  local url="$1" out="$2" i
+  for i in 1 2 3 4 5; do
+    if curl -fsSL -o "$out" "$url"; then
+      return 0
+    fi
+    echo "!! 下载失败（第 $i 次），3s 后重试: $url" >&2
+    rm -f "$out"
+    sleep 3
+  done
+  echo "!! 下载失败，已重试 5 次: $url" >&2
+  return 1
+}
+
 # --- protoc 二进准备（Maven Central 直下，无需安装） ---
 OS="$(uname -s)"
 case "$OS" in
@@ -33,7 +49,7 @@ else
 fi
 if [ ! -f "$PROTOC" ]; then
   echo ">> 下载 protoc ${PROTOC_VERSION}"
-  curl -fsSL -o "$PROTOC" "$PROTOC_URL"
+  download "$PROTOC_URL" "$PROTOC"
   chmod +x "$PROTOC" 2>/dev/null || true
 fi
 
@@ -62,7 +78,7 @@ gen_java() {
       PURL="https://repo.maven.apache.org/maven2/io/grpc/protoc-gen-grpc-java/${GRPC_JAVA_VERSION}/protoc-gen-grpc-java-${GRPC_JAVA_VERSION}-${PROTOC_OS}-${PROTOC_ARCH}.exe"
     fi
     echo ">> 下载 protoc-gen-grpc-java ${GRPC_JAVA_VERSION}"
-    curl -fsSL -o "$PLUGIN" "$PURL"
+    download "$PURL" "$PLUGIN"
     chmod +x "$PLUGIN" 2>/dev/null || true
   fi
   local OUT="$ROOT/protos/src/main/java"
