@@ -40,15 +40,16 @@ jobs:
           ./scripts/package-linux.sh --no-jre
 
       - name: 列出产物
-        run: ls -lh build/linux/*.tar.gz build/linux/*.sha256
+        run: ls -lh build/linux/notifyhub-*.tar.gz build/linux/notifyhub-*.sha256
 
       - name: 创建 Release 并上传产物
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
+          # 只传 notifyhub-* ：build/linux/ 下还有打包时下载的 jre21.tar.gz，别一并传上去
           gh release create "$TAG" \
             --title "NotifyHub $TAG" \
             --generate-notes \
-            build/linux/*.tar.gz \
-            build/linux/*.sha256
+            build/linux/notifyhub-*.tar.gz \
+            build/linux/notifyhub-*.sha256

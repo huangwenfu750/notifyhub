@@ -12,9 +12,12 @@ name: Publish
 #   MAVEN_SIGNING_KEY   GPG 私钥（Maven Central 强制要求）
 # GitHub Packages 用内置的 GITHUB_TOKEN，无需额外配置。
 
+# 注意：不能用 `release: published` —— Release 是用 GITHUB_TOKEN 建的，
+# 由 GITHUB_TOKEN 触发的事件不会级联触发其它工作流。改为监听 Release 工作流跑完。
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ['Release']
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -24,6 +27,7 @@ permissions:
 jobs:
   npm:
     name: npm (npmjs.com)
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,6 +49,7 @@ jobs:
 
   pypi:
     name: PyPI
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -68,6 +73,7 @@ jobs:
 
   maven-github:
     name: Maven (GitHub Packages)
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -86,6 +92,7 @@ jobs:
 
   maven-remote:
     name: Maven (其它远端仓库)
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
