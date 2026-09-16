@@ -6,7 +6,7 @@ gRPC 薄封装，无 Spring 依赖（Spring Boot 用户请用 [`sdks/spring-boot
 
 ```kotlin
 implementation(project(":sdk-java"))                              // 仓库内
-implementation("io.notifyhub:sdk-java:0.1.0")                     // 外部工程
+implementation("io.github.huangwenfu750:sdk-java:0.1.0")                     // 外部工程
 ```
 
 ## 用法

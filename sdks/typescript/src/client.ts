@@ -4,7 +4,7 @@
  * 通过 @grpc/proto-loader 运行时加载 proto，无需代码生成步骤。
  *
  * ```ts
- * import { NotifyClient } from "@notifyhub/client";
+ * import { NotifyClient } from "notifyhub-client";
  * const client = new NotifyClient("localhost:9987", "ntf_xxx");
  * await client.publish("alert", "部署完成", "v1.2.0 上线");
  * ```

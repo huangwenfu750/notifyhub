@@ -15,8 +15,8 @@ import (
 	"sync"
 	"time"
 
-	notifyhub "github.com/notifyhub/notifyhub-sdk-go"
-	v1 "github.com/notifyhub/notifyhub-sdk-go/gen/notify/v1"
+	notifyhub "github.com/huangwenfu750/notifyhub/sdks/go"
+	v1 "github.com/huangwenfu750/notifyhub/sdks/go/gen/notify/v1"
 )
 
 const (

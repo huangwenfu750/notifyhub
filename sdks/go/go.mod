@@ -1,4 +1,4 @@
-module github.com/notifyhub/notifyhub-sdk-go
+module github.com/huangwenfu750/notifyhub/sdks/go
 
 go 1.24.0
 

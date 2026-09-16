@@ -348,7 +348,7 @@ client.close();
 
 Gradle dependency (inside this repo you can simply use `implementation(project(":sdk-java"))`; for
 external projects run `gradle publishNotifyHubToMavenLocal` first, then reference
-`io.notifyhub:sdk-java:0.1.0`):
+`io.github.huangwenfu750:sdk-java:0.1.0`):
 
 ```java
 try (NotifyClient client = NotifyClient.newBuilder("localhost", 9987).token("ntf_xxx").build()) {
@@ -430,11 +430,11 @@ client.UpsertPlatform(ctx, &v1.PlatformConfig{
 
 ### 5.5 Spring Boot (Auto-Configuration)
 
-The repo ships a starter: `sdks/spring-boot` (`io.notifyhub:notifyhub-spring-boot-starter`).
+The repo ships a starter: `sdks/spring-boot` (`io.github.huangwenfu750:notifyhub-spring-boot-starter`).
 
 ```kotlin
 implementation(project(":sdk-spring-boot"))   // inside this repo
-// implementation("io.notifyhub:notifyhub-spring-boot-starter:0.1.0")  // after gradle publishNotifyHubToMavenLocal
+// implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")  // after gradle publishNotifyHubToMavenLocal
 ```
 
 `application.yml`:

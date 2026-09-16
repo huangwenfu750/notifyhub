@@ -15,7 +15,7 @@ implementation(project(":sdk-spring-boot"))
 外部项目（先 `gradle publishNotifyHubToMavenLocal`，该任务会连同 `protos`、`sdk-java` 一起发到本地仓库）：
 
 ```kotlin
-implementation("io.notifyhub:notifyhub-spring-boot-starter:0.1.0")
+implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")
 ```
 
 > Spring 相关依赖在 starter 里是 `compileOnly`，运行期由你项目的 Spring Boot 版本提供，兼容 3.x / 4.x。

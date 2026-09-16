@@ -14,7 +14,7 @@ import (
 	"io"
 	"time"
 
-	v1 "github.com/notifyhub/notifyhub-sdk-go/gen/notify/v1"
+	v1 "github.com/huangwenfu750/notifyhub/sdks/go/gen/notify/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"

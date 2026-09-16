@@ -152,8 +152,8 @@ gen_go() {
   # 显式传插件路径：Git Bash 里把 C:\... 拼进 PATH 不可靠
   "$PROTOC" -I "$WIN" \
     --plugin=protoc-gen-go="$PLUG1" --plugin=protoc-gen-go-grpc="$PLUG2" \
-    --go_out="$WOUT" --go_opt=module=github.com/notifyhub/notifyhub-sdk-go/gen \
-    --go-grpc_out="$WOUT" --go-grpc_opt=module=github.com/notifyhub/notifyhub-sdk-go/gen \
+    --go_out="$WOUT" --go_opt=module=github.com/huangwenfu750/notifyhub/sdks/go/gen \
+    --go-grpc_out="$WOUT" --go-grpc_opt=module=github.com/huangwenfu750/notifyhub/sdks/go/gen \
     "$WIN${PS}$PROTO_REL"
   echo ">> Go stub 已生成: sdks/go/gen"
 }

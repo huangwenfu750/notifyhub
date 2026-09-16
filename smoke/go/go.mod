@@ -2,7 +2,7 @@ module github.com/notifyhub/notifyhub-smoke-go
 
 go 1.24.0
 
-require github.com/notifyhub/notifyhub-sdk-go v0.0.0
+require github.com/huangwenfu750/notifyhub/sdks/go v0.0.0
 
 require (
 	golang.org/x/net v0.48.0 // indirect
@@ -13,4 +13,4 @@ require (
 	google.golang.org/protobuf v1.36.10 // indirect
 )
 
-replace github.com/notifyhub/notifyhub-sdk-go => ../../sdks/go
+replace github.com/huangwenfu750/notifyhub/sdks/go => ../../sdks/go

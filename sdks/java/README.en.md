@@ -7,7 +7,7 @@ A thin gRPC wrapper with no Spring dependency (Spring Boot users should use
 
 ```kotlin
 implementation(project(":sdk-java"))                              // inside this repo
-implementation("io.notifyhub:sdk-java:0.1.0")                     // external projects
+implementation("io.github.huangwenfu750:sdk-java:0.1.0")                     // external projects
 ```
 
 ## Usage

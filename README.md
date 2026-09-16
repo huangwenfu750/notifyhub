@@ -156,14 +156,16 @@ MAVEN_URL=https://... gradle publishNotifyHub
 # 产出每个 jar/pom/module 的 .asc 签名
 ```
 
-POM 的 scm / developer 元信息仍可用 `-P` 补齐（不传则省略；license 已随 `LICENSE` 定为 MIT 并写进 `gradle.properties`）：
+POM 的 license / scm / developer 元信息已写进 `gradle.properties`（Maven Central 要求这几项齐全），
+直接发布即可；需要覆盖时用 `-P` 传入同名属性：
 
 ```bash
-gradle publishNotifyHub \
-  -PpomLicenseName=MIT -PpomLicenseUrl=https://opensource.org/licenses/MIT \
-  -PpomScmUrl=https://github.com/huangwenfu750/notifyhub.git \
-  -PpomDeveloperId=notifyhub -PpomDeveloperName="NotifyHub" -PpomDeveloperEmail=dev@notifyhub.io
+gradle publishNotifyHub -PpomDeveloperEmail=you@example.com
 ```
+
+Maven 坐标是 `io.github.huangwenfu750`（GitHub 用户命名空间，Central 免域名验证）：
+`io.github.huangwenfu750:protos`、`io.github.huangwenfu750:sdk-java`、
+`io.github.huangwenfu750:notifyhub-spring-boot-starter`。
 
 跨进程烟雾测试（Java/Python/Node/Go 四语言 SDK 对真实服务端）：
 

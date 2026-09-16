@@ -324,7 +324,7 @@ client.close();
 
 ### 5.3 Java
 
-Gradle 依赖（本仓库内可直接 `implementation(project(":sdk-java"))`；外部工程先 `gradle publishNotifyHubToMavenLocal`，再引用 `io.notifyhub:sdk-java:0.1.0`）：
+Gradle 依赖（本仓库内可直接 `implementation(project(":sdk-java"))`；外部工程先 `gradle publishNotifyHubToMavenLocal`，再引用 `io.github.huangwenfu750:sdk-java:0.1.0`）：
 
 ```java
 try (NotifyClient client = NotifyClient.newBuilder("localhost", 9987).token("ntf_xxx").build()) {
@@ -404,11 +404,11 @@ client.UpsertPlatform(ctx, &v1.PlatformConfig{
 
 ### 5.5 Spring Boot（自动配置）
 
-仓库自带 starter：`sdks/spring-boot`（`io.notifyhub:notifyhub-spring-boot-starter`）。
+仓库自带 starter：`sdks/spring-boot`（`io.github.huangwenfu750:notifyhub-spring-boot-starter`）。
 
 ```kotlin
 implementation(project(":sdk-spring-boot"))   // 仓库内
-// implementation("io.notifyhub:notifyhub-spring-boot-starter:0.1.0")  // gradle publishNotifyHubToMavenLocal 之后
+// implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")  // gradle publishNotifyHubToMavenLocal 之后
 ```
 
 `application.yml`：

@@ -36,3 +36,8 @@ Thumbs.db
 
 # 运行日志
 *.log
+
+# Go 构建产物（go build 会在包目录留下可执行文件）
+examples/go/*.exe
+examples/go/notifyhub-example-go
+sdks/go/*.exe

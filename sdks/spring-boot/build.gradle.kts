@@ -3,7 +3,7 @@ plugins {
     `maven-publish`
 }
 
-group = "io.notifyhub"
+group = "io.github.huangwenfu750"
 version = "0.1.0"
 
 java {

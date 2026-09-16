@@ -1,5 +1,5 @@
 {
-  "name": "@notifyhub/client",
+  "name": "notifyhub-client",
   "version": "0.1.0",
   "description": "NotifyHub 多语言通知推送服务 - TypeScript/JavaScript 客户端",
   "main": "dist/client.js",
@@ -11,7 +11,26 @@
     "example:subscribe": "node examples/subscribe.js"
   },
   "keywords": ["notifyhub", "notification", "grpc", "dingtalk", "wecom", "feishu", "webhook"],
-  "license": "Apache-2.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/huangwenfu750/notifyhub.git",
+    "directory": "sdks/typescript"
+  },
+  "homepage": "https://github.com/huangwenfu750/notifyhub",
+  "bugs": "https://github.com/huangwenfu750/notifyhub/issues",
+  "files": [
+    "dist",
+    "proto",
+    "README.md",
+    "README.en.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@grpc/grpc-js": "^1.10.0",
     "@grpc/proto-loader": "^0.7.12"

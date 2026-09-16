@@ -145,10 +145,10 @@ public final class NotifyProto extends com.google.protobuf.GeneratedFile {
       "tPlatforms\022\020.notify.v1.Empty\032\027.notify.v1" +
       ".PlatformList\022:\n\016RemovePlatform\022\026.notify" +
       ".v1.PlatformRef\032\020.notify.v1.Empty\022)\n\004Pin" +
-      "g\022\020.notify.v1.Empty\032\017.notify.v1.PongB^\n\017" +
-      "io.notifyhub.v1B\013NotifyProtoP\001Z<github.c" +
-      "om/notifyhub/notifyhub-sdk-go/gen/notify" +
-      "/v1;notifyv1b\006proto3"
+      "g\022\020.notify.v1.Empty\032\017.notify.v1.PongBc\n\017" +
+      "io.notifyhub.v1B\013NotifyProtoP\001ZAgithub.c" +
+      "om/huangwenfu750/notifyhub/sdks/go/gen/n" +
+      "otify/v1;notifyv1b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,

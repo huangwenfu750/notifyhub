@@ -16,7 +16,7 @@ External projects (run `gradle publishNotifyHubToMavenLocal` first — it publis
 `sdk-java` and the starter to the local repository together):
 
 ```kotlin
-implementation("io.notifyhub:notifyhub-spring-boot-starter:0.1.0")
+implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")
 ```
 
 > Spring-related dependencies are `compileOnly` in the starter; your project provides them at

@@ -159,15 +159,16 @@ MAVEN_URL=https://... gradle publishNotifyHub
 # produces .asc signatures for every jar/pom/module
 ```
 
-POM scm / developer metadata can still be filled in with `-P` (omitted when not passed;
-the license is already fixed to MIT in `gradle.properties` alongside `LICENSE`):
+POM license / scm / developer metadata is already set in `gradle.properties` (Maven Central
+requires all of them), so you can publish as-is; override any of them with `-P` when needed:
 
 ```bash
-gradle publishNotifyHub \
-  -PpomLicenseName=MIT -PpomLicenseUrl=https://opensource.org/licenses/MIT \
-  -PpomScmUrl=https://github.com/huangwenfu750/notifyhub.git \
-  -PpomDeveloperId=notifyhub -PpomDeveloperName="NotifyHub" -PpomDeveloperEmail=dev@notifyhub.io
+gradle publishNotifyHub -PpomDeveloperEmail=you@example.com
 ```
+
+Maven coordinates use `io.github.huangwenfu750` (the GitHub user namespace, which Central verifies
+automatically without a domain): `io.github.huangwenfu750:protos`,
+`io.github.huangwenfu750:sdk-java`, `io.github.huangwenfu750:notifyhub-spring-boot-starter`.
 
 Cross-process smoke tests (the four language SDKs against a real server):
 
