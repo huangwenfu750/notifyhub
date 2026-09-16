@@ -1,5 +1,9 @@
 # NotifyHub
 
+[![CI](https://github.com/huangwenfu750/notifyhub/actions/workflows/ci.yml/badge.svg)](https://github.com/huangwenfu750/notifyhub/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/huangwenfu750/notifyhub)](https://github.com/huangwenfu750/notifyhub/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 > English: [README.en.md](README.en.md)
 
 **多语言通知推送服务**：单进程部署，任意语言客户端通过 gRPC 接入；
@@ -126,16 +130,39 @@ client.upsert_platform(
 
 ## 安装 SDK（包管理平台）
 
-| 语言 | 安装方式 | 说明 |
+| 语言 | 安装方式 | 状态 |
 |---|---|---|
-| TypeScript / JS | `npm i notifyhub-client` | npm / pnpm / yarn / bun 共用同一个 registry，发一次四者都能装 |
-| Python | `pip install notifyhub-client` | PyPI |
-| Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.0")` | Maven |
-| Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")` | Maven |
-| Go | `go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.0` | Go modules，靠 `sdks/go/v*` 标签分发 |
+| Go | `go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.0` | ✅ 已发布（靠 `sdks/go/v*` 标签分发） |
+| Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.0")` | ✅ 已发布到 GitHub Packages |
+| Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")` | ✅ 已发布到 GitHub Packages |
+| TypeScript / JS | `npm i notifyhub-client` | ⏳ 待发布（npm / pnpm / yarn / bun 共用同一 registry） |
+| Python | `pip install notifyhub-client` | ⏳ 待发布 |
+
+从 GitHub Packages 取 Maven 包需要额外声明仓库（该 registry 需认证，读也要 token）：
+
+```kotlin
+repositories {
+    maven {
+        url = uri("https://maven.pkg.github.com/huangwenfu750/notifyhub")
+        credentials {                                  // 也可以用环境变量，别硬编码
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")
+        }
+    }
+}
+```
 
 服务端发行版在 [Releases](https://github.com/huangwenfu750/notifyhub/releases)：
 `notifyhub-<ver>-linux-x86_64.tar.gz`（自带 JRE 21，解压即用）与 `-nojre` 精简版，各带 `.sha256`。
+
+## 发版流程（维护者）
+
+1. `git tag v0.2.0 && git push origin v0.2.0`
+   → `release.yml` 在 CI 构建 Linux 发行包并创建 Release、附上产物
+2. 同时给 Go 子模块打标签（前缀必须与模块路径一致，缺了 `go get` 就取不到）：
+   `git tag sdks/go/v0.2.0 && git push origin sdks/go/v0.2.0`
+3. Release 建好后 `publish.yml` 自动推送各语言包。要开通 npm / PyPI，
+   在仓库 Settings → Secrets 里加 `NPM_TOKEN`、`PYPI_API_TOKEN`，然后重跑该工作流即可。
 
 ## 构建与测试
 

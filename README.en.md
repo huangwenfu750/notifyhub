@@ -1,5 +1,9 @@
 # NotifyHub
 
+[![CI](https://github.com/huangwenfu750/notifyhub/actions/workflows/ci.yml/badge.svg)](https://github.com/huangwenfu750/notifyhub/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/huangwenfu750/notifyhub)](https://github.com/huangwenfu750/notifyhub/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 > 中文版：[README.md](README.md)
 
 **Multi-language notification push service**: single-process deployment, clients in any language connect over gRPC.
@@ -127,17 +131,41 @@ The step-by-step guide lives in [docs/usage.en.md](docs/usage.en.md) (Spring Boo
 
 ## Install the SDKs (package registries)
 
-| Language | Install | Notes |
+| Language | Install | Status |
 |---|---|---|
-| TypeScript / JS | `npm i notifyhub-client` | npm / pnpm / yarn / bun share one registry — publishing once covers all four |
-| Python | `pip install notifyhub-client` | PyPI |
-| Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.0")` | Maven |
-| Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")` | Maven |
-| Go | `go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.0` | Go modules, distributed via `sdks/go/v*` tags |
+| Go | `go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.0` | ✅ published (distributed via `sdks/go/v*` tags) |
+| Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.0")` | ✅ published to GitHub Packages |
+| Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")` | ✅ published to GitHub Packages |
+| TypeScript / JS | `npm i notifyhub-client` | ⏳ pending (npm / pnpm / yarn / bun share one registry) |
+| Python | `pip install notifyhub-client` | ⏳ pending |
+
+Pulling Maven artifacts from GitHub Packages requires declaring the repository (that registry needs
+authentication even for reads):
+
+```kotlin
+repositories {
+    maven {
+        url = uri("https://maven.pkg.github.com/huangwenfu750/notifyhub")
+        credentials {                                  // prefer env vars, do not hardcode
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")
+        }
+    }
+}
+```
 
 Server distributions are on the [Releases](https://github.com/huangwenfu750/notifyhub/releases) page:
 `notifyhub-<ver>-linux-x86_64.tar.gz` (bundles JRE 21, unpack and run) and the `-nojre` slim
 variant, each with a `.sha256`.
+
+## Release Process (maintainers)
+
+1. `git tag v0.2.0 && git push origin v0.2.0`
+   → `release.yml` builds the Linux packages in CI and creates the Release with the artifacts attached
+2. Also tag the Go submodule (the prefix must match the module path, otherwise `go get` fails):
+   `git tag sdks/go/v0.2.0 && git push origin sdks/go/v0.2.0`
+3. `publish.yml` pushes the language packages once the Release exists. To enable npm / PyPI, add
+   `NPM_TOKEN` and `PYPI_API_TOKEN` under Settings → Secrets, then re-run that workflow.
 
 ## Build & Test
 
