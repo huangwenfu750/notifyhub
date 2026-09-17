@@ -138,19 +138,70 @@ client.upsert_platform(
 | TypeScript / JS | `npm i notifyhub-client` | ⏳ 待发布（npm / pnpm / yarn / bun 共用同一 registry） |
 | Python | `pip install notifyhub-client` | ⏳ 待发布 |
 
-从 GitHub Packages 取 Maven 包需要额外声明仓库（该 registry 需认证，读也要 token）：
+这几个坐标**只发在 GitHub Packages，Maven Central 上没有**（`Could not find artifact ... in central`
+就是没声明这个仓库，不是版本写错）。取包前先加仓库 —— 该 registry 读写都要 token，匿名请求直接 401。
+
+Gradle（Kotlin DSL）：
 
 ```kotlin
 repositories {
+    mavenCentral()
     maven {
         url = uri("https://maven.pkg.github.com/huangwenfu750/notifyhub")
         credentials {                                  // 也可以用环境变量，别硬编码
-            username = System.getenv("GITHUB_ACTOR")
-            password = System.getenv("GITHUB_TOKEN")
+            username = System.getenv("GITHUB_ACTOR")   // GitHub 用户名
+            password = System.getenv("GITHUB_TOKEN")   // PAT，需 read:packages
         }
     }
 }
 ```
+
+Gradle（Groovy）同理：
+
+```groovy
+repositories {
+    mavenCentral()
+    maven {
+        url = 'https://maven.pkg.github.com/huangwenfu750/notifyhub'
+        credentials {
+            username = System.getenv('GITHUB_ACTOR')
+            password = System.getenv('GITHUB_TOKEN')
+        }
+    }
+}
+```
+
+Maven（`~/.m2/settings.xml`，`server.id` 必须与 `repository.id` 一致）：
+
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>github</id>
+      <username>你的 GitHub 用户名</username>
+      <password>你的 PAT（read:packages）</password>
+    </server>
+  </servers>
+  <profiles>
+    <profile>
+      <id>github</id>
+      <repositories>
+        <repository>
+          <id>github</id>
+          <url>https://maven.pkg.github.com/huangwenfu750/notifyhub</url>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <activeProfile>github</activeProfile>
+  </activeProfiles>
+</settings>
+```
+
+> PAT 在 GitHub → Settings → Developer settings → Personal access tokens 里生成，勾 `read:packages` 即可；
+> 仓库 public 也不例外，读包同样要带上。不想折腾 token 就走本地仓库：`gradle publishNotifyHubToMavenLocal`，
+> 然后在使用方加 `mavenLocal()`。
 
 服务端发行版在 [Releases](https://github.com/huangwenfu750/notifyhub/releases)：
 `notifyhub-<ver>-linux-x86_64.tar.gz`（自带 JRE 21，解压即用）与 `-nojre` 精简版，各带 `.sha256`。
@@ -206,6 +257,31 @@ gradle publishNotifyHub -PpomDeveloperEmail=you@example.com
 Maven 坐标是 `io.github.huangwenfu750`（GitHub 用户命名空间，Central 免域名验证）：
 `io.github.huangwenfu750:protos`、`io.github.huangwenfu750:sdk-java`、
 `io.github.huangwenfu750:notifyhub-spring-boot-starter`。
+
+### 发到 Maven Central
+
+发上去之后使用方就不必配 GitHub Packages 了。前置（每个账号只做一次）：
+
+1. 用 GitHub 账号登录 [Central Portal](https://central.sonatype.com)，注册命名空间
+   `io.github.huangwenfu750`（GitHub 命名空间按页面提示建一个指定名称的临时 public 仓库即完成校验）。
+2. 生成 Portal 的 User Token（用户名 / 密码两段），只用于上传。
+3. 准备 GPG 密钥并把公钥传到 keyserver —— Central 用它校验 `.asc`。
+
+打包（Portal 要求一次提交完整的 deployment，所以先落到本地目录再整体上传）：
+
+```bash
+MAVEN_SIGNING_KEY="$(gpg --armor --export-secret-keys you@example.com)" \
+MAVEN_SIGNING_PASSWORD=... \
+gradle publishNotifyHubToCentralBundle
+# → build/central/notifyhub-<ver>-central-bundle.zip
+```
+
+每个模块在包里是 `jar` / `-sources.jar` / `-javadoc.jar` / `pom` / `module` 各一份并带 `.asc`
+（不设 `MAVEN_SIGNING_KEY` 就出无签名版本，本地自测够用，Central 会拒收）。
+
+上传：Portal → Deployments → Upload 选这个 zip，校验通过后 Publish；或走 API
+`POST https://central.sonatype.com/api/v3/publisher/upload`（Basic 认证用 User Token）。
+**已发布过的版本号不能覆盖**，重发前先 bump 版本。
 
 跨进程烟雾测试（Java/Python/Node/Go 四语言 SDK 对真实服务端）：
 

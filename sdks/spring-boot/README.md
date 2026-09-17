@@ -15,8 +15,27 @@ implementation(project(":sdk-spring-boot"))
 外部项目（先 `gradle publishNotifyHubToMavenLocal`，该任务会连同 `protos`、`sdk-java` 一起发到本地仓库）：
 
 ```kotlin
+repositories { mavenLocal() }
+
 implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")
 ```
+
+也可以直接从 GitHub Packages 取（**这个坐标不在 Maven Central 上**，报
+`Could not find ... in central` 就是没声明该仓库；该 registry 读也要 token）：
+
+```kotlin
+repositories {
+    maven {
+        url = uri("https://maven.pkg.github.com/huangwenfu750/notifyhub")
+        credentials {                                  // 建议走环境变量，别硬编码
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")   // PAT 需 read:packages
+        }
+    }
+}
+```
+
+Maven 用户见 [README.md](../../README.md#安装-sdk包管理平台) 里的 `settings.xml` 写法。
 
 > Spring 相关依赖在 starter 里是 `compileOnly`，运行期由你项目的 Spring Boot 版本提供，兼容 3.x / 4.x。
 > 编译版本由 `gradle.properties` 的 `springBootVersion` 控制。

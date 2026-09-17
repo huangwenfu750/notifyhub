@@ -139,20 +139,71 @@ The step-by-step guide lives in [docs/usage.en.md](docs/usage.en.md) (Spring Boo
 | TypeScript / JS | `npm i notifyhub-client` | ⏳ pending (npm / pnpm / yarn / bun share one registry) |
 | Python | `pip install notifyhub-client` | ⏳ pending |
 
-Pulling Maven artifacts from GitHub Packages requires declaring the repository (that registry needs
-authentication even for reads):
+These coordinates are published to GitHub Packages only — **they are not on Maven Central**.
+A `Could not find artifact ... in central` error means the repository below is missing, not that the
+version is wrong. That registry requires a token even for reads (anonymous requests get 401).
+
+Gradle (Kotlin DSL):
 
 ```kotlin
 repositories {
+    mavenCentral()
     maven {
         url = uri("https://maven.pkg.github.com/huangwenfu750/notifyhub")
         credentials {                                  // prefer env vars, do not hardcode
-            username = System.getenv("GITHUB_ACTOR")
-            password = System.getenv("GITHUB_TOKEN")
+            username = System.getenv("GITHUB_ACTOR")   // GitHub user name
+            password = System.getenv("GITHUB_TOKEN")   // PAT with read:packages
         }
     }
 }
 ```
+
+Gradle (Groovy):
+
+```groovy
+repositories {
+    mavenCentral()
+    maven {
+        url = 'https://maven.pkg.github.com/huangwenfu750/notifyhub'
+        credentials {
+            username = System.getenv('GITHUB_ACTOR')
+            password = System.getenv('GITHUB_TOKEN')
+        }
+    }
+}
+```
+
+Maven (`~/.m2/settings.xml`; `server.id` must match `repository.id`):
+
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>github</id>
+      <username>your-github-user</username>
+      <password>your-pat-with-read-packages</password>
+    </server>
+  </servers>
+  <profiles>
+    <profile>
+      <id>github</id>
+      <repositories>
+        <repository>
+          <id>github</id>
+          <url>https://maven.pkg.github.com/huangwenfu750/notifyhub</url>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <activeProfile>github</activeProfile>
+  </activeProfiles>
+</settings>
+```
+
+> Create the PAT under GitHub → Settings → Developer settings → Personal access tokens with
+> `read:packages`; public repos need it for reads too. To skip tokens entirely, publish locally with
+> `gradle publishNotifyHubToMavenLocal` and add `mavenLocal()` on the consumer side.
 
 Server distributions are on the [Releases](https://github.com/huangwenfu750/notifyhub/releases) page:
 `notifyhub-<ver>-linux-x86_64.tar.gz` (bundles JRE 21, unpack and run) and the `-nojre` slim
@@ -211,6 +262,34 @@ gradle publishNotifyHub -PpomDeveloperEmail=you@example.com
 Maven coordinates use `io.github.huangwenfu750` (the GitHub user namespace, which Central verifies
 automatically without a domain): `io.github.huangwenfu750:protos`,
 `io.github.huangwenfu750:sdk-java`, `io.github.huangwenfu750:notifyhub-spring-boot-starter`.
+
+### Publishing to Maven Central
+
+Once published there, consumers no longer need the GitHub Packages setup. Prerequisites (once per
+account):
+
+1. Sign in to the [Central Portal](https://central.sonatype.com) with your GitHub account and
+   register the namespace `io.github.huangwenfu750` (GitHub namespaces are verified by creating a
+   temporary public repo with the name shown on the page).
+2. Generate a Portal User Token (username / password pair) — used for uploads only.
+3. Prepare a GPG key and publish the public key to a keyserver; Central verifies `.asc` against it.
+
+Build the bundle (the Portal requires one complete deployment per upload, so publish to a local
+directory first and zip it up):
+
+```bash
+MAVEN_SIGNING_KEY="$(gpg --armor --export-secret-keys you@example.com)" \
+MAVEN_SIGNING_PASSWORD=... \
+gradle publishNotifyHubToCentralBundle
+# → build/central/notifyhub-<ver>-central-bundle.zip
+```
+
+Each module ships `jar` / `-sources.jar` / `-javadoc.jar` / `pom` / `module`, every one with an
+`.asc`. Without `MAVEN_SIGNING_KEY` you get an unsigned bundle (fine locally, rejected by Central).
+
+Upload it via Portal → Deployments → Upload, then Publish once validation passes; or call
+`POST https://central.sonatype.com/api/v3/publisher/upload` with the User Token as Basic auth.
+**A released version can never be overwritten** — bump the version before re-publishing.
 
 Cross-process smoke tests (the four language SDKs against a real server):
 

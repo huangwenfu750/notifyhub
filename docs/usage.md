@@ -408,8 +408,15 @@ client.UpsertPlatform(ctx, &v1.PlatformConfig{
 
 ```kotlin
 implementation(project(":sdk-spring-boot"))   // 仓库内
-// implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")  // gradle publishNotifyHubToMavenLocal 之后
+
+// 外部项目（二选一）：
+// 1) 本地仓库：先 gradle publishNotifyHubToMavenLocal，再 repositories { mavenLocal() }
+// 2) GitHub Packages：该坐标不在 Maven Central 上，需声明仓库 + 带 read:packages 的 token
+implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")
 ```
+
+> 报 `Could not find artifact ... in central` / `Could not find io.github...:0.1.0` 时，
+> 说明只配了 Maven Central。仓库与凭据写法见 [README.md](../README.md#安装-sdk包管理平台)。
 
 `application.yml`：
 

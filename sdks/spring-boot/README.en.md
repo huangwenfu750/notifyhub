@@ -16,8 +16,28 @@ External projects (run `gradle publishNotifyHubToMavenLocal` first — it publis
 `sdk-java` and the starter to the local repository together):
 
 ```kotlin
+repositories { mavenLocal() }
+
 implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")
 ```
+
+Or pull it straight from GitHub Packages (**this coordinate is not on Maven Central** — a
+`Could not find ... in central` error means the repository is not declared; that registry needs a
+token even for reads):
+
+```kotlin
+repositories {
+    maven {
+        url = uri("https://maven.pkg.github.com/huangwenfu750/notifyhub")
+        credentials {                                  // prefer env vars, do not hardcode
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")   // PAT with read:packages
+        }
+    }
+}
+```
+
+Maven users: see the `settings.xml` snippet in [README.en.md](../../README.en.md#install-the-sdks-package-registries).
 
 > Spring-related dependencies are `compileOnly` in the starter; your project provides them at
 > runtime, so both 3.x and 4.x work.

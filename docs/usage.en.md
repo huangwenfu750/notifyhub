@@ -434,8 +434,17 @@ The repo ships a starter: `sdks/spring-boot` (`io.github.huangwenfu750:notifyhub
 
 ```kotlin
 implementation(project(":sdk-spring-boot"))   // inside this repo
-// implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")  // after gradle publishNotifyHubToMavenLocal
+
+// External projects (pick one):
+// 1) local repo: run gradle publishNotifyHubToMavenLocal, then repositories { mavenLocal() }
+// 2) GitHub Packages: this coordinate is not on Maven Central — declare the repo and pass a
+//    read:packages token
+implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")
 ```
+
+> `Could not find artifact ... in central` / `Could not find io.github...:0.1.0` means only Maven
+> Central is configured. Repository and credential snippets live in
+> [README.en.md](../README.en.md#install-the-sdks-package-registries).
 
 `application.yml`:
 
