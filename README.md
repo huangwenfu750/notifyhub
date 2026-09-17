@@ -283,6 +283,10 @@ gradle publishNotifyHubToCentralBundle
 `POST https://central.sonatype.com/api/v3/publisher/upload`（Basic 认证用 User Token）。
 **已发布过的版本号不能覆盖**，重发前先 bump 版本。
 
+打 `v*` 标签后 `publish.yml` 也会构建同一个 zip，挂在 workflow artifact `maven-central-bundle` 上
+（保留 30 天）；再配上 Secrets `CENTRAL_USERNAME` / `CENTRAL_PASSWORD`（Portal User Token），
+CI 会顺手上传，默认 `USER_MANAGED` —— 仍要人工 Publish。
+
 跨进程烟雾测试（Java/Python/Node/Go 四语言 SDK 对真实服务端）：
 
 ```bash

@@ -291,6 +291,11 @@ Upload it via Portal → Deployments → Upload, then Publish once validation pa
 `POST https://central.sonatype.com/api/v3/publisher/upload` with the User Token as Basic auth.
 **A released version can never be overwritten** — bump the version before re-publishing.
 
+Pushing a `v*` tag also makes `publish.yml` build the same zip and attach it as the
+`maven-central-bundle` workflow artifact (kept 30 days). Add the `CENTRAL_USERNAME` /
+`CENTRAL_PASSWORD` secrets (Portal User Token) and CI uploads it too — with `USER_MANAGED`, so a
+human Publish is still required.
+
 Cross-process smoke tests (the four language SDKs against a real server):
 
 ```bash

@@ -10,6 +10,8 @@ name: Publish
 #   MAVEN_URL / MAVEN_USER / MAVEN_PASSWORD
 #                       其它 Maven 仓库（如 Maven Central 的 OSSRH staging 地址）
 #   MAVEN_SIGNING_KEY   GPG 私钥（Maven Central 强制要求）
+#   CENTRAL_USERNAME / CENTRAL_PASSWORD
+#                       Central Portal 的 User Token，用于自动上传 bundle（不配就只留构建产物）
 # GitHub Packages 用内置的 GITHUB_TOKEN，无需额外配置。
 
 # 注意：不能用 `release: published` —— Release 是用 GITHUB_TOKEN 建的，
@@ -115,3 +117,49 @@ jobs:
             exit 0
           fi
           gradle publishNotifyHub
+
+  maven-central-bundle:
+    name: Maven Central 上传包
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+      - name: 生成 Java stub
+        run: bash scripts/gen-protos.sh java
+      # Portal 要求一次上传完整 deployment，所以先发到本地目录再整体打 zip
+      - name: 构建 bundle
+        env:
+          MAVEN_SIGNING_KEY: ${{ secrets.MAVEN_SIGNING_KEY }}
+          MAVEN_SIGNING_PASSWORD: ${{ secrets.MAVEN_SIGNING_PASSWORD }}
+        run: |
+          if [ -z "$MAVEN_SIGNING_KEY" ]; then
+            echo "::warning::未配置 MAVEN_SIGNING_KEY，打出的 bundle 无签名，Central 会拒收 —— 只用于检查产物"
+          fi
+          gradle publishNotifyHubToCentralBundle
+      - uses: actions/upload-artifact@v4
+        with:
+          name: maven-central-bundle
+          path: build/central/*.zip
+          if-no-files-found: error
+          retention-days: 30
+      # 配了 Portal User Token 就顺手上传，否则只在上面的 artifact 里留着手动下载。
+      # 默认 USER_MANAGED：上传后仍需到 Portal 点 Publish，留一次反悔机会。
+      - name: 上传到 Central Portal（可选）
+        continue-on-error: true
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+        run: |
+          if [ -z "$CENTRAL_USERNAME" ]; then
+            echo "::warning::未配置 CENTRAL_USERNAME / CENTRAL_PASSWORD（Portal User Token），跳过上传"
+            exit 0
+          fi
+          curl -f --retry 3 --retry-delay 10 \
+            -u "$CENTRAL_USERNAME:$CENTRAL_PASSWORD" \
+            -F "bundle=@$(ls build/central/*.zip)" \
+            "https://central.sonatype.com/api/v3/publisher/upload?publishingType=USER_MANAGED"
+          echo "已上传，到 Portal → Deployments 校验通过后点 Publish 才真正对外可见"
