@@ -206,6 +206,11 @@ Maven（`~/.m2/settings.xml`，`server.id` 必须与 `repository.id` 一致）�
 服务端发行版在 [Releases](https://github.com/huangwenfu750/notifyhub/releases)：
 `notifyhub-<ver>-linux-x86_64.tar.gz`（自带 JRE 21，解压即用）与 `-nojre` 精简版，各带 `.sha256`。
 
+## 更新日志
+
+版本间的差异记在 [CHANGELOG.md](CHANGELOG.md)（English: [CHANGELOG.en.md](CHANGELOG.en.md)），
+发版时对应段落会自动成为 Release 说明。
+
 ## 发版流程（维护者）
 
 0. 改版本号 —— 散在 10 处（四个 Gradle 模块、打包脚本、Python 的 `pyproject.toml` 与

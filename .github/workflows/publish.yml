@@ -47,7 +47,12 @@ jobs:
             exit 0
           fi
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
-          cd sdks/typescript && npm publish --access public
+          cd sdks/typescript
+          # 403 几乎都是 token 权限不够，直说原因比让人去翻 npm 的长日志强
+          if ! npm publish --access public; then
+            echo "::error::npm publish 失败。若日志里有 403 'You may not perform that action'，说明 NPM_TOKEN 没有发布权限：换成 npmjs.com 的 Classic / Automation token，或给 granular token 勾上 Read and write（且不要限定到别的包）"
+            exit 1
+          fi
 
   pypi:
     name: PyPI

@@ -209,6 +209,11 @@ Server distributions are on the [Releases](https://github.com/huangwenfu750/noti
 `notifyhub-<ver>-linux-x86_64.tar.gz` (bundles JRE 21, unpack and run) and the `-nojre` slim
 variant, each with a `.sha256`.
 
+## Changelog
+
+Differences between versions live in [CHANGELOG.en.md](CHANGELOG.en.md)
+(中文: [CHANGELOG.md](CHANGELOG.md)); the matching section becomes the Release notes automatically.
+
 ## Release Process (maintainers)
 
 0. Bump the version — it lives in 10 places (four Gradle modules, the packaging script, the Python

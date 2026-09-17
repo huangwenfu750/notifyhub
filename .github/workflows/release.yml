@@ -42,6 +42,23 @@ jobs:
       - name: 列出产物
         run: ls -lh build/linux/notifyhub-*.tar.gz build/linux/notifyhub-*.sha256
 
+      # 用 CHANGELOG.md 里该版本的段落作为发布说明（比自动生成的提交列表好读）
+      - name: 提取本版本更新日志
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          python - "${TAG#v}" > release-notes.md <<'PY'
+          import re, sys
+
+          ver = sys.argv[1]
+          text = open('CHANGELOG.md', encoding='utf-8').read()
+          m = re.search(r'^## \[?' + re.escape(ver) + r'\]?[^\n]*\n(.*?)(?=^## |\Z)',
+                        text, re.S | re.M)
+          print(m.group(1).strip() if m
+                else f'（CHANGELOG.md 里没有 {ver} 的条目，发版前请先补上）')
+          PY
+          cat release-notes.md
+
       - name: 创建 Release 并上传产物
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -50,6 +67,6 @@ jobs:
           # 只传 notifyhub-* ：build/linux/ 下还有打包时下载的 jre21.tar.gz，别一并传上去
           gh release create "$TAG" \
             --title "NotifyHub $TAG" \
-            --generate-notes \
+            --notes-file release-notes.md \
             build/linux/notifyhub-*.tar.gz \
             build/linux/notifyhub-*.sha256
