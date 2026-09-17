@@ -10,7 +10,7 @@ runs a JRE plus the server jar).
 
 ```bash
 ./scripts/package-linux.sh --no-jre
-cp build/linux/notifyhub-0.1.0-linux-x86_64-nojre.tar.gz packaging/docker/
+cp build/linux/notifyhub-0.1.1-linux-x86_64-nojre.tar.gz packaging/docker/
 cp config.example.yaml packaging/docker/config.yaml   # edit tokens and platforms
 cd packaging/docker
 docker compose up -d --build

@@ -21,7 +21,7 @@ dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:3.5.16"))
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")   // /actuator/health + /actuator/metrics
-    implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")
+    implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")
 }
 
 tasks.withType<JavaCompile> {

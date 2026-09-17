@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "notifyhub-client"
-version = "0.1.0"
+version = "0.1.1"
 description = "NotifyHub 多语言通知推送服务 - Python 客户端"
 readme = "README.md"
 requires-python = ">=3.9"

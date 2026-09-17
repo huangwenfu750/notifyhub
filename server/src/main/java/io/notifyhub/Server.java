@@ -21,7 +21,7 @@ import java.util.HashSet;
 /** 服务组装与生命周期管理。 */
 public final class Server implements AutoCloseable {
 
-    public static final String VERSION = "0.1.0";
+    public static final String VERSION = "0.1.1";
 
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 

@@ -42,7 +42,7 @@ gradle :server:installDist
 cp config.example.yaml config.yaml   # 填入你的机器人 webhook/secret 与 auth.tokens
 
 ./server/build/install/server/bin/server --config config.yaml
-# [main] INFO io.notifyhub.Server - NotifyHub 0.1.0 已启动，监听 0.0.0.0:9987
+# [main] INFO io.notifyhub.Server - NotifyHub 0.1.1 已启动，监听 0.0.0.0:9987
 ```
 
 Docker（两种镜像，任选其一）：
@@ -50,7 +50,7 @@ Docker（两种镜像，任选其一）：
 ```bash
 # 1) 运行时镜像（推荐）：把已构建的发行包塞进 JRE 基础镜像，不在容器里编译
 ./scripts/package-linux.sh --no-jre
-cp build/linux/notifyhub-0.1.0-linux-x86_64-nojre.tar.gz packaging/docker/
+cp build/linux/notifyhub-0.1.1-linux-x86_64-nojre.tar.gz packaging/docker/
 cp config.example.yaml packaging/docker/config.yaml   # 填 auth.tokens / platforms
 cd packaging/docker && docker compose up -d --build
 
@@ -65,11 +65,11 @@ docker compose up --build -d
 Linux 发行包（自带 JRE 21，解压即用，无需预装 Java）：
 
 ```bash
-./scripts/package-linux.sh   # 产出 build/linux/notifyhub-0.1.0-linux-x86_64.tar.gz
+./scripts/package-linux.sh   # 产出 build/linux/notifyhub-0.1.1-linux-x86_64.tar.gz
 
 # 目标机
-tar -xzf notifyhub-0.1.0-linux-x86_64.tar.gz
-sudo ./notifyhub-0.1.0-linux-x86_64/install.sh   # 安装到 /opt/notifyhub 并注册 systemd
+tar -xzf notifyhub-0.1.1-linux-x86_64.tar.gz
+sudo ./notifyhub-0.1.1-linux-x86_64/install.sh   # 安装到 /opt/notifyhub 并注册 systemd
 sudo systemctl start notifyhub
 ```
 
@@ -95,7 +95,7 @@ const client = new NotifyClient("localhost:9987", "ntf_xxx");
 await client.publish("alert", "部署完成", "v1.2.0 上线");
 ```
 ```go
-// Go（sdks/go，先 ./scripts/gen-protos.sh go）
+// Go（sdks/go）
 client, _ := notifyhub.New("localhost:9987", notifyhub.WithToken("ntf_xxx"))
 client.Publish(ctx, "alert", "部署完成", "v1.2.0 上线")
 ```
@@ -132,11 +132,15 @@ client.upsert_platform(
 
 | 语言 | 安装方式 | 状态 |
 |---|---|---|
-| Go | `go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.0` | ✅ 已发布（靠 `sdks/go/v*` 标签分发） |
-| Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.0")` | ✅ 已发布到 GitHub Packages |
-| Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")` | ✅ 已发布到 GitHub Packages |
+| Go | `go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.1` | ✅ 已发布（靠 `sdks/go/v*` 标签分发） |
+| Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.1")` | ✅ 已发布到 GitHub Packages |
+| Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")` | ✅ 已发布到 GitHub Packages |
 | TypeScript / JS | `npm i notifyhub-client` | ⏳ 待发布（包名未被占用，卡在 `NPM_TOKEN` 权限） |
-| Python | `pip install notifyhub-client` | ✅ 已发布（PyPI 0.1.0） |
+| Python | `pip install notifyhub-client` | ✅ 已发布（PyPI 0.1.1） |
+
+> 若 `pip install` 报 `No matching distribution found`，而 PyPI 上确实已有该版本，基本是国内镜像还没同步
+> （实测 `mirrors.aliyun.com` 对新包会滞后）。指定官方源即可绕开：
+> `pip install -i https://pypi.org/simple notifyhub-client`
 
 这几个坐标**只发在 GitHub Packages，Maven Central 上没有**（`Could not find artifact ... in central`
 就是没声明这个仓库，不是版本写错）。取包前先加仓库 —— 该 registry 读写都要 token，匿名请求直接 401。
@@ -310,7 +314,7 @@ CI 会顺手上传，默认 `USER_MANAGED` —— 仍要人工 Publish。
 .venv/Scripts/python.exe smoke/py_smoke.py     # Python SDK
 node smoke/node_smoke.js                       # Node SDK
 gradle :sdk-java:smoke -Ptoken=ntf_smoke_token # Java SDK
-cd smoke/go && go run .                        # Go SDK（先 ./scripts/gen-protos.sh go）
+cd smoke/go && go run .                        # Go SDK
 ```
 
 吞吐基线（笔记本 CPU，Python 客户端压测，瓶颈在客户端）：约 5.7k msg/s，p99=3.8ms；服务端 gRPC 容量远高于此（可用 `ghz` 复测）：

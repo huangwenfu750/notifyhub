@@ -82,7 +82,7 @@ Check the version with `server --version` (does not start the service).
 Successful startup log:
 
 ```
-[main] INFO io.notifyhub.Server - NotifyHub 0.1.0 已启动，监听 0.0.0.0:9987 (tokens=1, platforms=3, workers=16)
+[main] INFO io.notifyhub.Server - NotifyHub 0.1.1 已启动，监听 0.0.0.0:9987 (tokens=1, platforms=3, workers=16)
 ```
 
 > Port conflicts, wrong platform types and YAML syntax errors all **fail fast at startup** — the
@@ -263,7 +263,7 @@ from notifyhub import NotifyClient, PublishRequest   # PublishRequest is for bat
 
 with NotifyClient("localhost:9987", token="ntf_xxx") as client:
     # 1) Health check (no auth required)
-    print(client.ping())              # {'version': '0.1.0', 'uptime_seconds': '12'}
+    print(client.ping())              # {'version': '0.1.1', 'uptime_seconds': '12'}
 
     # 2) Publish
     ack = client.publish(
@@ -352,7 +352,7 @@ external projects pick one — run `gradle publishNotifyHubToMavenLocal` and add
 **not on Maven Central**; see [README.en.md](../README.en.md#install-the-sdks-package-registries)):
 
 ```kotlin
-implementation("io.github.huangwenfu750:sdk-java:0.1.0")
+implementation("io.github.huangwenfu750:sdk-java:0.1.1")
 ```
 
 ```java
@@ -399,7 +399,15 @@ can be attached to a channel you build yourself.
 ### 5.4 Go
 
 ```bash
-./scripts/gen-protos.sh go     # needs a local Go toolchain, generates sdks/go/gen
+go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.1
+```
+
+The gRPC stubs under `gen/` are shipped with the module, so it compiles right after fetching
+(the `v0.1.0` module is missing `gen/notify/v1` — do not use it).
+Regenerate only after changing the proto (needs a local Go toolchain):
+
+```bash
+./scripts/gen-protos.sh go     # generates sdks/go/gen
 cd sdks/go && go mod tidy
 ```
 
@@ -429,7 +437,7 @@ client.UpsertPlatform(ctx, &v1.PlatformConfig{
 })
 ```
 
-> Go stubs must be generated (`sdks/go/gen` is not committed); once generated, the module compiles.
+> The stubs under `sdks/go/gen` are committed, so the module compiles as-is.
 > Plugins are installed via `go install`; if `proxy.golang.org` is unreachable, the script
 > automatically falls back to `goproxy.cn`.
 
@@ -444,10 +452,10 @@ implementation(project(":sdk-spring-boot"))   // inside this repo
 // 1) local repo: run gradle publishNotifyHubToMavenLocal, then repositories { mavenLocal() }
 // 2) GitHub Packages: this coordinate is not on Maven Central — declare the repo and pass a
 //    read:packages token
-implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")
+implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")
 ```
 
-> `Could not find artifact ... in central` / `Could not find io.github...:0.1.0` means only Maven
+> `Could not find artifact ... in central` / `Could not find io.github...:0.1.1` means only Maven
 > Central is configured. Repository and credential snippets live in
 > [README.en.md](../README.en.md#install-the-sdks-package-registries).
 
@@ -585,7 +593,7 @@ Cross-process smoke tests (four language SDKs against a real server):
 python3 smoke/py_smoke.py                             # Linux/macOS
 node smoke/node_smoke.js                              # requires cd sdks/typescript && npm run build first
 gradle :sdk-java:smoke -Ptoken=ntf_smoke_token        # override with -Ptarget=host:port
-cd smoke/go && go run .                               # requires ./scripts/gen-protos.sh go first
+cd smoke/go && go run .                               # Go SDK
 ```
 
 Throughput baseline (laptop CPU, Python client benchmark, client is the bottleneck): ~**5.7k msg/s,
@@ -600,7 +608,7 @@ ghz --insecure -n 100000 -c 64 --call notify.v1.Notify/Publish \
 
 ---
 
-## 9. Known Limits (current version 0.1.0)
+## 9. Known Limits (current version 0.1.1)
 
 - Subscription is **at most once**: not persisted, not replayed; a slow subscriber drops events.
 - Platform delivery is **asynchronous and best-effort**: `Publish` returning `accepted=true` only

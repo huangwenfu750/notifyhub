@@ -42,7 +42,7 @@ gradle :server:installDist
 cp config.example.yaml config.yaml   # fill in your bot webhook/secret and auth.tokens
 
 ./server/build/install/server/bin/server --config config.yaml
-# [main] INFO io.notifyhub.Server - NotifyHub 0.1.0 已启动，监听 0.0.0.0:9987
+# [main] INFO io.notifyhub.Server - NotifyHub 0.1.1 已启动，监听 0.0.0.0:9987
 ```
 
 Docker (two images, pick either):
@@ -50,7 +50,7 @@ Docker (two images, pick either):
 ```bash
 # 1) Runtime image (recommended): drops the prebuilt distribution into a JRE base image, no compile inside the container
 ./scripts/package-linux.sh --no-jre
-cp build/linux/notifyhub-0.1.0-linux-x86_64-nojre.tar.gz packaging/docker/
+cp build/linux/notifyhub-0.1.1-linux-x86_64-nojre.tar.gz packaging/docker/
 cp config.example.yaml packaging/docker/config.yaml   # fill in auth.tokens / platforms
 cd packaging/docker && docker compose up -d --build
 
@@ -65,11 +65,11 @@ and ship a TCP health check; see [packaging/docker/README.en.md](packaging/docke
 Linux distribution package (bundles JRE 21, unpack and run, no preinstalled Java needed):
 
 ```bash
-./scripts/package-linux.sh   # produces build/linux/notifyhub-0.1.0-linux-x86_64.tar.gz
+./scripts/package-linux.sh   # produces build/linux/notifyhub-0.1.1-linux-x86_64.tar.gz
 
 # On the target machine
-tar -xzf notifyhub-0.1.0-linux-x86_64.tar.gz
-sudo ./notifyhub-0.1.0-linux-x86_64/install.sh   # installs to /opt/notifyhub and registers systemd
+tar -xzf notifyhub-0.1.1-linux-x86_64.tar.gz
+sudo ./notifyhub-0.1.1-linux-x86_64/install.sh   # installs to /opt/notifyhub and registers systemd
 sudo systemctl start notifyhub
 ```
 
@@ -95,7 +95,7 @@ const client = new NotifyClient("localhost:9987", "ntf_xxx");
 await client.publish("alert", "Deployment finished", "v1.2.0 is live");
 ```
 ```go
-// Go (sdks/go, run ./scripts/gen-protos.sh go first)
+// Go (sdks/go)
 client, _ := notifyhub.New("localhost:9987", notifyhub.WithToken("ntf_xxx"))
 client.Publish(ctx, "alert", "Deployment finished", "v1.2.0 is live")
 ```
@@ -133,11 +133,16 @@ The step-by-step guide lives in [docs/usage.en.md](docs/usage.en.md) (Spring Boo
 
 | Language | Install | Status |
 |---|---|---|
-| Go | `go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.0` | ✅ published (distributed via `sdks/go/v*` tags) |
-| Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.0")` | ✅ published to GitHub Packages |
-| Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")` | ✅ published to GitHub Packages |
+| Go | `go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.1` | ✅ published (distributed via `sdks/go/v*` tags) |
+| Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.1")` | ✅ published to GitHub Packages |
+| Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")` | ✅ published to GitHub Packages |
 | TypeScript / JS | `npm i notifyhub-client` | ⏳ pending (name is free; blocked on `NPM_TOKEN` permissions) |
-| Python | `pip install notifyhub-client` | ✅ published (PyPI 0.1.0) |
+| Python | `pip install notifyhub-client` | ✅ published (PyPI 0.1.1) |
+
+> If `pip install` reports `No matching distribution found` while the version does exist on PyPI,
+> your mirror has not synced yet (`mirrors.aliyun.com` is measurably behind for new packages).
+> Point pip at the official index to work around it:
+> `pip install -i https://pypi.org/simple notifyhub-client`
 
 These coordinates are published to GitHub Packages only — **they are not on Maven Central**.
 A `Could not find artifact ... in central` error means the repository below is missing, not that the
@@ -322,7 +327,7 @@ Cross-process smoke tests (the four language SDKs against a real server):
 .venv/Scripts/python.exe smoke/py_smoke.py     # Python SDK
 node smoke/node_smoke.js                       # Node SDK
 gradle :sdk-java:smoke -Ptoken=ntf_smoke_token # Java SDK
-cd smoke/go && go run .                        # Go SDK (run ./scripts/gen-protos.sh go first)
+cd smoke/go && go run .                        # Go SDK
 ```
 
 Throughput baseline (laptop CPU, Python client benchmark, client is the bottleneck): ~5.7k msg/s, p99=3.8ms;

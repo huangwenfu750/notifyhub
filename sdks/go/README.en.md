@@ -2,16 +2,26 @@
 
 > 中文版：[README.md](README.md)
 
-> The gRPC stubs under `gen/` are not committed; generate them before first use (Go toolchain required):
->
-> ```bash
-> ./scripts/gen-protos.sh go                    # generates gen/notify/v1/*.go
-> cd sdks/go && go mod tidy && go build ./...   # verify it compiles
-> cd ../../smoke/go && go run .                 # 8-step smoke test against a real server
-> ```
->
-> Plugins are installed via `go install`; if `proxy.golang.org` is unreachable, the script
-> automatically switches to `goproxy.cn`.
+## Install
+
+```bash
+go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.1
+```
+
+The gRPC stubs under `gen/` are shipped with the module, so it compiles right after `go get` —
+no local codegen needed. (The `v0.1.0` module is missing `gen/notify/v1` and cannot build;
+use `v0.1.1` or later.)
+
+Regenerate only after changing the proto (Go toolchain required):
+
+```bash
+./scripts/gen-protos.sh go                    # generates gen/notify/v1/*.go
+cd sdks/go && go mod tidy && go build ./...   # verify it compiles
+cd ../../smoke/go && go run .                 # 8-step smoke test against a real server
+```
+
+Plugins are installed via `go install`; if `proxy.golang.org` is unreachable, the script
+automatically switches to `goproxy.cn`.
 
 ## Usage
 

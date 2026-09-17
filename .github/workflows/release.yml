@@ -1,6 +1,7 @@
 name: Release
 
-# 打 v* 标签即触发：构建 Linux 发行包并创建 GitHub Release 附上产物。
+# 打 v* 标签即触发：构建 Linux 发行包并创建 GitHub Release 附上产物，
+# 同时自动打 Go 模块标签 sdks/go/v*（Go 模块必须带子目录前缀的独立标签）。
 #   git tag v0.1.0 && git push origin v0.1.0
 on:
   push:
@@ -70,3 +71,90 @@ jobs:
             --notes-file release-notes.md \
             build/linux/notifyhub-*.tar.gz \
             build/linux/notifyhub-*.sha256
+
+  # Go 子模块必须用自己的标签（sdks/go/v*）才能被 go get 发现。
+  # 这个标签以前是手工打的，漏打一次就出现了 v0.1.0 缺 gen/ 的事故，所以收进 CI。
+  go-tag:
+    name: Go 模块标签（sdks/go/v*）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: 解析标签名
+        id: v
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "gotag=sdks/go/$TAG" >> "$GITHUB_OUTPUT"
+
+      # Go 模块是从仓库按标签直接取源码的：gen/ 只要漏入库，用户 go get 到的就是编译不过的包。
+      # v0.1.0 正是这么坏的（.gitignore 里写了 sdks/go/gen/），这里双重设卡防复发。
+      - name: 校验 stub 已入库且能编译
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin "refs/tags/$TAG:refs/tags/$TAG"
+          git checkout "refs/tags/$TAG" -- sdks/go
+          missing=0
+          for f in sdks/go/gen/notify/v1/notify.pb.go sdks/go/gen/notify/v1/notify_grpc.pb.go; do
+            if [ ! -f "$f" ]; then
+              echo "::error::$f 不存在"
+              missing=1
+            elif ! git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+              echo "::error::$f 没被 git 跟踪，go get 拿不到（多半是 .gitignore 又把它排除了）"
+              missing=1
+            fi
+          done
+          [ "$missing" = 0 ] || exit 1
+          cd sdks/go && go build ./...
+
+      # 本机 git 创建带斜杠的 ref 会静默失败（git tag sdks/go/vX 返回 0 但不写入），所以走 API。
+      - name: 创建 / 更新 sdks/go 标签
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.v.outputs.tag }}
+          GOTAG: ${{ steps.v.outputs.gotag }}
+        run: |
+          SHA="$(git rev-parse "refs/tags/$TAG^{commit}")"
+          echo "sdks/go 标签指向 $SHA"
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$GOTAG" >/dev/null 2>&1; then
+            echo "$GOTAG 已存在，强制更新"
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/$GOTAG" \
+              -f sha="$SHA" -F force=true >/dev/null
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f "ref=refs/tags/$GOTAG" -f sha="$SHA" >/dev/null
+            echo "已创建 $GOTAG"
+          fi
+
+      # 代理第一次被问到才会去抓标签，抓完就按版本号永久缓存 —— 所以要在 CI 里先问一次，
+      # 顺便把「缓存的 zip 里到底有没有 stub」验掉，别等用户 go get 才发现。
+      - name: 预热并校验模块代理缓存
+        env:
+          TAG: ${{ steps.v.outputs.tag }}
+        run: |
+          set -euo pipefail
+          BASE="https://proxy.golang.org/github.com/huangwenfu750/notifyhub/sdks/go/@v"
+          for i in $(seq 1 12); do
+            if curl -fsS "$BASE/$TAG.info" >/dev/null; then break; fi
+            echo "第 $i 次未就绪，10s 后重试"
+            sleep 10
+          done
+          curl -fsSL -o /tmp/mod.zip "$BASE/$TAG.zip"
+          python3 - <<'PY'
+          import sys, zipfile
+          names = zipfile.ZipFile('/tmp/mod.zip').namelist()
+          stubs = [n for n in names if n.endswith('notify.pb.go')]
+          print('zip 内文件数:', len(names))
+          print('stub:', stubs)
+          if not stubs:
+              sys.exit('!! 代理缓存的模块里没有 stub，go get 仍会失败')
+          PY

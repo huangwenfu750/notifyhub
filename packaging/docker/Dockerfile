@@ -13,7 +13,7 @@
 ARG JRE_IMAGE=eclipse-temurin:21-jre
 FROM ${JRE_IMAGE}
 
-ARG DIST_FILE=notifyhub-0.1.0-linux-x86_64-nojre.tar.gz
+ARG DIST_FILE=notifyhub-0.1.1-linux-x86_64-nojre.tar.gz
 COPY ${DIST_FILE} /tmp/notifyhub.tar.gz
 
 RUN set -eux; \

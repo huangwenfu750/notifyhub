@@ -22,8 +22,8 @@ share/doc/README.md    本文件
 ## 方式一：解压即用
 
 ```bash
-tar -xzf notifyhub-0.1.0-linux-x86_64.tar.gz
-cd notifyhub-0.1.0-linux-x86_64
+tar -xzf notifyhub-0.1.1-linux-x86_64.tar.gz
+cd notifyhub-0.1.1-linux-x86_64
 
 cp etc/notifyhub.yaml etc/my.yaml    # 改 token / 平台 webhook
 ./bin/notifyhub --config etc/my.yaml            # 前台

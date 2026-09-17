@@ -34,7 +34,7 @@ JRE_URL = ("https://api.adoptium.net/v3/binary/latest/21/ga/linux/x64/"
            "jre/hotspot/normal/eclipse")
 JRE_TAR = os.path.join(WORK, "jre21.tar.gz")
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 ARCH = "x86_64"
 
 # 需要可执行位的名字 / 目录（路径用 "/" 分隔）

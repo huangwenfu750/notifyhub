@@ -2,15 +2,24 @@
 
 > English: [README.en.md](README.en.md)
 
-> `gen/` 下的 gRPC stub 不入库，首次使用需生成（需要 Go 工具链）：
->
-> ```bash
-> ./scripts/gen-protos.sh go                    # 生成 gen/notify/v1/*.go
-> cd sdks/go && go mod tidy && go build ./...   # 校验编译
-> cd ../../smoke/go && go run .                 # 对真实服务端跑 8 步烟雾测试
-> ```
->
-> 插件走 `go install`；若 `proxy.golang.org` 不可达，脚本会自动改用 `goproxy.cn`。
+## 安装
+
+```bash
+go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.1
+```
+
+`gen/` 下的 gRPC stub 已随版本库发布，`go get` 后可直接编译，不需要本地生成。
+（v0.1.0 的模块包缺 `gen/notify/v1`，无法编译，请直接用 v0.1.1 或更高版本。）
+
+改动 proto 后需要重新生成时才用下面的命令（需要 Go 工具链）：
+
+```bash
+./scripts/gen-protos.sh go                    # 生成 gen/notify/v1/*.go
+cd sdks/go && go mod tidy && go build ./...   # 校验编译
+cd ../../smoke/go && go run .                 # 对真实服务端跑 8 步烟雾测试
+```
+
+插件走 `go install`；若 `proxy.golang.org` 不可达，脚本会自动改用 `goproxy.cn`。
 
 ## 用法
 

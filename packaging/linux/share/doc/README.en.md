@@ -23,8 +23,8 @@ else behaves identically.
 ## Option 1: Unpack and Run
 
 ```bash
-tar -xzf notifyhub-0.1.0-linux-x86_64.tar.gz
-cd notifyhub-0.1.0-linux-x86_64
+tar -xzf notifyhub-0.1.1-linux-x86_64.tar.gz
+cd notifyhub-0.1.1-linux-x86_64
 
 cp etc/notifyhub.yaml etc/my.yaml    # edit the token / platform webhook
 ./bin/notifyhub --config etc/my.yaml            # foreground

@@ -36,7 +36,7 @@ NotifyHub 平台已注册: name=demo-hook type=webhook topics=[demo.*]
 Tomcat started on port 8080 (http)
 Started NotifyHubExampleApplication in 2.289 seconds
 NotifyHub 已订阅: topics=[demo.*]
-ping -> 0.1.0
+ping -> 0.1.1
 已注册平台 -> [demo-hook, smoke-hook]
 ```
 
@@ -59,7 +59,7 @@ curl -X POST localhost:8080/api/notify/batch -H "Content-Type: application/json"
 # -> 第 2 条 accepted=false error=INVALID_ARGUMENT: topic 不能为空，第 3 条照常成功
 
 curl localhost:8080/api/platforms    # -> ["demo-hook","smoke-hook"]
-curl localhost:8080/api/ping         # -> {"uptimeSeconds":43,"version":"0.1.0"}
+curl localhost:8080/api/ping         # -> {"uptimeSeconds":43,"version":"0.1.1"}
 ```
 
 ## 5. 健康检查与指标
@@ -68,7 +68,7 @@ curl localhost:8080/api/ping         # -> {"uptimeSeconds":43,"version":"0.1.0"}
 
 ```bash
 curl localhost:8080/actuator/health
-# -> ... "notifyHub":{"status":"UP","details":{"version":"0.1.0","uptimeSeconds":47}} ...
+# -> ... "notifyHub":{"status":"UP","details":{"version":"0.1.1","uptimeSeconds":47}} ...
 
 curl localhost:8080/actuator/metrics/notifyhub.publish.total
 # -> COUNT=3.0, tags: topic=[demo.alert, demo.deploy], outcome=[accepted, deduplicated]

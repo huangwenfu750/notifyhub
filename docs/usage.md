@@ -75,7 +75,7 @@ server\build\install\server\bin\server.bat --config <仓库路径>\config.yaml
 启动成功日志：
 
 ```
-[main] INFO io.notifyhub.Server - NotifyHub 0.1.0 已启动，监听 0.0.0.0:9987 (tokens=1, platforms=3, workers=16)
+[main] INFO io.notifyhub.Server - NotifyHub 0.1.1 已启动，监听 0.0.0.0:9987 (tokens=1, platforms=3, workers=16)
 ```
 
 > 端口占用、平台类型写错、YAML 语法错误都会在启动时**立即报错退出**，不会带病运行。
@@ -243,7 +243,7 @@ from notifyhub import NotifyClient, PublishRequest   # PublishRequest 用于批�
 
 with NotifyClient("localhost:9987", token="ntf_xxx") as client:
     # 1) 健康检查（免鉴权）
-    print(client.ping())              # {'version': '0.1.0', 'uptime_seconds': '12'}
+    print(client.ping())              # {'version': '0.1.1', 'uptime_seconds': '12'}
 
     # 2) 发布
     ack = client.publish(
@@ -329,7 +329,7 @@ Gradle 依赖（本仓库内可直接 `implementation(project(":sdk-java"))`；�
 仓库 —— 该坐标**不在 Maven Central 上**，写法见 [README.md](../README.md#安装-sdk包管理平台)）：
 
 ```kotlin
-implementation("io.github.huangwenfu750:sdk-java:0.1.0")
+implementation("io.github.huangwenfu750:sdk-java:0.1.1")
 ```
 
 ```java
@@ -375,7 +375,14 @@ try (NotifyClient client = NotifyClient.newBuilder("localhost", 9987).token("ntf
 ### 5.4 Go
 
 ```bash
-./scripts/gen-protos.sh go     # 需要本机 Go 工具链，生成 sdks/go/gen
+go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.1
+```
+
+`gen/` 下的 gRPC stub 已随模块发布，取下来就能编译（v0.1.0 的模块包缺 `gen/notify/v1`，不能用）。
+只有改动了 proto 才需要重新生成（需本机 Go 工具链）：
+
+```bash
+./scripts/gen-protos.sh go     # 生成 sdks/go/gen
 cd sdks/go && go mod tidy
 ```
 
@@ -418,10 +425,10 @@ implementation(project(":sdk-spring-boot"))   // 仓库内
 // 外部项目（二选一）：
 // 1) 本地仓库：先 gradle publishNotifyHubToMavenLocal，再 repositories { mavenLocal() }
 // 2) GitHub Packages：该坐标不在 Maven Central 上，需声明仓库 + 带 read:packages 的 token
-implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")
+implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")
 ```
 
-> 报 `Could not find artifact ... in central` / `Could not find io.github...:0.1.0` 时，
+> 报 `Could not find artifact ... in central` / `Could not find io.github...:0.1.1` 时，
 > 说明只配了 Maven Central。仓库与凭据写法见 [README.md](../README.md#安装-sdk包管理平台)。
 
 `application.yml`：
@@ -542,7 +549,7 @@ gradle test                            # 单元 + E2E（WireMock 模拟平台 HT
 python3 smoke/py_smoke.py                             # Linux/macOS
 node smoke/node_smoke.js                              # 需先 cd sdks/typescript && npm run build
 gradle :sdk-java:smoke -Ptoken=ntf_smoke_token        # 可用 -Ptarget=host:port 覆盖
-cd smoke/go && go run .                               # 需先 ./scripts/gen-protos.sh go
+cd smoke/go && go run .                               # Go SDK
 ```
 
 吞吐基线（笔记本 CPU，Python 客户端压测，瓶颈在客户端）：约 **5.7k msg/s，p99=3.8ms**。服务端容量用 `ghz` 复测：
@@ -556,7 +563,7 @@ ghz --insecure -n 100000 -c 64 --call notify.v1.Notify/Publish \
 
 ---
 
-## 9. 已知边界（当前版本 0.1.0）
+## 9. 已知边界（当前版本 0.1.1）
 
 - 订阅为**至多一次**，不持久化、不重放；订阅端慢消费会丢事件。
 - 平台投递**异步、尽力而为**：`Publish` 返回 `accepted=true` 只代表已入队，不代表平台已收到。
