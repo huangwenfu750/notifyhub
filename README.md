@@ -295,7 +295,8 @@ Maven 坐标是 `io.github.huangwenfu750`（GitHub 用户命名空间，Central 
 gpg --batch --passphrase '<口令>' --quick-generate-key \
     "NotifyHub <huangwenfu750@users.noreply.github.com>" rsa4096 sign never
 
-# 2) 记下 <KEYID>（sec 行 rsa4096 后面那串），把公钥传上去
+# 2) 记下 <KEYID>（sec 行 rsa4096/ 后面那串），把公钥传上去
+#    注意：<KEYID> 是占位符，尖括号不要一起敲，只留那 16 位十六进制
 gpg --list-secret-keys --keyid-format=long
 gpg --keyserver keyserver.ubuntu.com --send-keys <KEYID>
 gpg --keyserver keys.openpgp.org     --send-keys <KEYID>   # 可选，多一路更快同步
@@ -310,6 +311,9 @@ gpg --batch --yes --pinentry-mode loopback --passphrase '<口令>' \
 - `<KEYID>!` 的感叹号表示只导出这一个密钥，不带子密钥。
 - `MAVEN_SIGNING_PASSWORD` 填第 1 步的口令；私钥没设口令就留空（不推荐）。
 - 密钥到期后续了期，要**再 send-keys 一次**，否则 Central 拿到的还是旧公钥。
+- `send-keys` 卡住或超时（公司网络常封 hkp 的 11371 端口）时，换成
+  `gpg --keyserver hkps://keys.openpgp.org --send-keys <KEYID>`，或到
+  <https://keyserver.ubuntu.com> 网页粘贴 `gpg --armor --export <KEYID>` 的输出。
 - `private-key.asc` 千万别提交：仓库 `.gitignore` 已排除 `*.asc`。
 
 #### 需要的 Secrets

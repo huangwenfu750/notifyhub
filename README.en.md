@@ -308,7 +308,8 @@ account):
 gpg --batch --passphrase '<passphrase>' --quick-generate-key \
     "NotifyHub <huangwenfu750@users.noreply.github.com>" rsa4096 sign never
 
-# 2) Note the <KEYID> (the string after rsa4096 on the sec line) and send the public key
+# 2) Note the <KEYID> (the string after rsa4096/ on the sec line) and send the public key.
+#    <KEYID> is a placeholder — type it without the angle brackets
 gpg --list-secret-keys --keyid-format=long
 gpg --keyserver keyserver.ubuntu.com --send-keys <KEYID>
 gpg --keyserver keys.openpgp.org     --send-keys <KEYID>   # optional, syncs faster
@@ -326,6 +327,9 @@ Notes:
   (not recommended).
 - After extending an expired key, **send the public key again** — otherwise Central still holds the
   old one.
+- If `send-keys` hangs or times out (corporate networks often block hkp port 11371), use
+  `gpg --keyserver hkps://keys.openpgp.org --send-keys <KEYID>`, or paste the output of
+  `gpg --armor --export <KEYID>` into <https://keyserver.ubuntu.com>.
 - Never commit `private-key.asc`; the repo's `.gitignore` already excludes `*.asc`.
 
 #### Secrets you need
