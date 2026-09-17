@@ -3,6 +3,10 @@ name: Release
 # 打 v* 标签即触发：构建 Linux 发行包并创建 GitHub Release 附上产物，
 # 同时自动打 Go 模块标签 sdks/go/v*（Go 模块必须带子目录前缀的独立标签）。
 #   git tag v0.1.0 && git push origin v0.1.0
+#
+# 需要的仓库 Secret：
+#   GO_TAG_TOKEN   PAT（Contents: Read and write），用于建 sdks/go/v* 标签。
+#                  GITHUB_TOKEN 打 git refs 一律 403；不配就退回 GITHUB_TOKEN，多半会失败。
 on:
   push:
     tags: ['v*']
@@ -121,28 +125,35 @@ jobs:
           [ "$missing" = 0 ] || exit 1
           cd sdks/go && go build ./...
 
-      # 本机 git 创建带斜杠的 ref 会静默失败（git tag sdks/go/vX 返回 0 但不写入），所以走 API。
+      # 只能走 API：本机与 CI 的 git 创建带斜杠的 ref 都会静默失败（git tag 返回 0 但不写入）。
+      # 且 GITHUB_TOKEN 打 git refs 会 403，必须是 PAT，所以用 GO_TAG_TOKEN（没配则退回 GITHUB_TOKEN）。
       - name: 创建 / 更新 sdks/go 标签
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GO_TAG_TOKEN || secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.v.outputs.tag }}
           GOTAG: ${{ steps.v.outputs.gotag }}
         run: |
           set -euo pipefail
           SHA="$(git rev-parse "refs/tags/$TAG^{commit}")"
           API="https://api.github.com/repos/$GITHUB_REPOSITORY"
-          AUTH=(-H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json")
-          echo "$GOTAG -> $SHA"
+          H=(-H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json")
+          RESP="$(mktemp)"
           # 用 ls-remote 判存在：gh api 拼带斜杠的 ref 路径容易踩坑
           if git ls-remote --exit-code --tags origin "refs/tags/$GOTAG" >/dev/null 2>&1; then
-            echo "$GOTAG 已存在，强制更新"
-            curl -fsS -X PATCH "${AUTH[@]}" "$API/git/refs/tags/$GOTAG?force=true" \
-              -d "{\"sha\":\"$SHA\",\"force\":true}" >/dev/null
+            echo "$GOTAG 已存在，更新到 $SHA"
+            HTTP="$(curl -sS -o "$RESP" -w '%{http_code}' -X PATCH "${H[@]}" \
+              "$API/git/refs/tags/$GOTAG?force=true" -d "{\"sha\":\"$SHA\",\"force\":true}")"
           else
-            curl -fsS -X POST "${AUTH[@]}" "$API/git/refs" \
-              -d "{\"ref\":\"refs/tags/$GOTAG\",\"sha\":\"$SHA\"}" >/dev/null
-            echo "已创建 $GOTAG"
+            echo "创建 $GOTAG -> $SHA"
+            HTTP="$(curl -sS -o "$RESP" -w '%{http_code}' -X POST "${H[@]}" \
+              "$API/git/refs" -d "{\"ref\":\"refs/tags/$GOTAG\",\"sha\":\"$SHA\"}")"
           fi
+          if [ "$HTTP" != 200 ] && [ "$HTTP" != 201 ]; then
+            echo "::error::建 $GOTAG 失败（HTTP $HTTP）：$(cat "$RESP")"
+            echo "GITHUB_TOKEN 打 git refs 会被 403；请在仓库 Secrets 配 GO_TAG_TOKEN（PAT，Contents: Read and write）"
+            exit 1
+          fi
+          echo "$GOTAG 就绪"
 
       # 代理第一次被问到才会去抓标签，抓完就按版本号永久缓存 —— 所以要在 CI 里先问一次，
       # 顺便把「缓存的 zip 里到底有没有 stub」验掉，别等用户 go get 才发现。
