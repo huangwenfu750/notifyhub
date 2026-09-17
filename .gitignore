@@ -35,6 +35,9 @@ Thumbs.db
 /config.yaml
 /packaging/docker/config.yaml
 
+# 本地维护文档（发版流程 / 开发指南 / 项目元信息等，不随开源内容发布）
+/docs/local/
+
 # WorkBuddy 工作区数据
 .workbuddy-ai/
 

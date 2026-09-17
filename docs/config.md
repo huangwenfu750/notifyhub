@@ -45,4 +45,4 @@
 ## 运行时管理
 
 Admin RPC（`UpsertPlatform/ListPlatforms/RemovePlatform`）可在不重启的情况下增删改平台；
-运行时注册的平台仅存于内存，重启后以配置文件为准。持久化与 Web 控制台规划在 V2。
+运行时注册的平台仅存于内存，重启后以配置文件为准。

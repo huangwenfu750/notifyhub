@@ -192,19 +192,7 @@ notify.upsertPlatform(PlatformConfig.newBuilder()
         .addTopics("ops.#").build());
 ```
 
-## 8. Tests
-
-```bash
-gradle :sdk-spring-boot:test
-```
-
-Besides pure configuration assertions, there are 4 **end-to-end cases** (`NotifyHubSpringEndToEndTest`):
-they boot a real NotifyHub server in-process (`Server.create` + random port) together with a real
-Spring application (full `SpringApplication` lifecycle), receive deliveries with the JDK built-in
-`HttpServer`, and verify the whole chain: "publish → platform receives HTTP → event fed back into
-`@EventListener` → dedup → batch publish → health check".
-
-## 9. Configuration Properties
+## 8. Configuration Properties
 
 | Property | Default | Description |
 |---|---|---|

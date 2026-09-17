@@ -241,8 +241,7 @@ client.subscribe(["deadletter"], lambda e: print("delivery failed:", e.params))
 - If a subscriber is too slow, events are dropped (the server keeps one queue per subscription, so a
   slow consumer does not block others).
 - Disconnecting unsubscribes automatically; you can also `cancel()` / `close()` the handle explicitly.
-- For "must not lose messages" scenarios: have the subscriber persist events to its own storage, or
-  wait for V2 durable delivery.
+- For "must not lose messages" scenarios: have the subscriber persist events to its own storage.
 
 ---
 
@@ -579,48 +578,18 @@ delivery is `INFO`, failure is `WARN` (with the attempt number), dead letter is 
 
 ---
 
-## 8. Testing & Benchmarking
-
-```bash
-gradle test                            # unit + E2E (WireMock stubs the platform HTTP calls)
-```
-
-Cross-process smoke tests (four language SDKs against a real server):
-
-```bash
-./server/build/install/server/bin/server --config smoke/config.yaml &
-
-.venv/Scripts/python.exe smoke/py_smoke.py            # Windows
-python3 smoke/py_smoke.py                             # Linux/macOS
-node smoke/node_smoke.js                              # requires cd sdks/typescript && npm run build first
-gradle :sdk-java:smoke -Ptoken=ntf_smoke_token        # override with -Ptarget=host:port
-cd smoke/go && go run .                               # Go SDK
-```
-
-Throughput baseline (laptop CPU, Python client benchmark, client is the bottleneck): ~**5.7k msg/s,
-p99=3.8ms**. Re-measure server capacity with `ghz`:
-
-```bash
-ghz --insecure -n 100000 -c 64 --call notify.v1.Notify/Publish \
-    -d '{"topic":"bench","title":"t","content":"c"}' -H "x-api-token: ntf_xxx" 127.0.0.1:9987
-```
-
-`scripts/bench.py` is the bundled Python benchmark script.
-
----
-
-## 9. Known Limits (current version 0.1.1)
+## 8. Known Limits (current version 0.1.1)
 
 - Subscription is **at most once**: not persisted, not replayed; a slow subscriber drops events.
 - Platform delivery is **asynchronous and best-effort**: `Publish` returning `accepted=true` only
   means the message was queued, not that the platform received it.
 - Platforms registered via Admin disappear after a restart.
-- No web console and no delivery history query yet (planned for V2).
-- Browser access requires a gRPC-Web gateway (planned for V2).
+- No web console and no delivery history query yet.
+- Browser access requires a gRPC-Web gateway.
 
 ---
 
-## 10. Three-Minute Checklist
+## 9. Three-Minute Checklist
 
 1. `./scripts/gen-protos.sh java && gradle :server:installDist`
 2. Write a minimal `config.yaml` (see section 2: no auth + local webhook)

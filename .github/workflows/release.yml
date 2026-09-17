@@ -2,11 +2,8 @@ name: Release
 
 # 打 v* 标签即触发：构建 Linux 发行包并创建 GitHub Release 附上产物，
 # 同时自动打 Go 模块标签 sdks/go/v*（Go 模块必须带子目录前缀的独立标签）。
-#   git tag v0.1.0 && git push origin v0.1.0
-#
-# 需要的仓库 Secret：
-#   GO_TAG_TOKEN   PAT（Contents: Read and write），用于建 sdks/go/v* 标签。
-#                  GITHUB_TOKEN 打 git refs 一律 403；不配就退回 GITHUB_TOKEN，多半会失败。
+# 需要 Secret GO_TAG_TOKEN（PAT，Contents: Read and write），否则建标签会 403；
+# 发版步骤与 Secrets 清单见 docs/local/发布流程.md（本地文档）。
 on:
   push:
     tags: ['v*']
@@ -47,20 +44,36 @@ jobs:
       - name: 列出产物
         run: ls -lh build/linux/notifyhub-*.tar.gz build/linux/notifyhub-*.sha256
 
-      # 用 CHANGELOG.md 里该版本的段落作为发布说明（比自动生成的提交列表好读）
+      # 优先用 CHANGELOG.md 里该版本的段落作为发布说明（比提交列表好读）；
+      # CHANGELOG.md 已移到 docs/local/（被 .gitignore 排除，CI 里不存在），
+      # 所以这里必须能兜底到 git log，否则发版流程会直接崩。
       - name: 提取本版本更新日志
         env:
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
           python - "${TAG#v}" > release-notes.md <<'PY'
-          import re, sys
+          import os, re, subprocess, sys
 
           ver = sys.argv[1]
-          text = open('CHANGELOG.md', encoding='utf-8').read()
-          m = re.search(r'^## \[?' + re.escape(ver) + r'\]?[^\n]*\n(.*?)(?=^## |\Z)',
-                        text, re.S | re.M)
-          print(m.group(1).strip() if m
-                else f'（CHANGELOG.md 里没有 {ver} 的条目，发版前请先补上）')
+          notes = ''
+
+          if os.path.exists('CHANGELOG.md'):
+              text = open('CHANGELOG.md', encoding='utf-8').read()
+              m = re.search(r'^## \[?' + re.escape(ver) + r'\]?[^\n]*\n(.*?)(?=^## |\Z)',
+                            text, re.S | re.M)
+              if m:
+                  notes = m.group(1).strip()
+
+          if not notes:
+              # 没有 CHANGELOG 时用提交列表兜底（上一个 tag 到本次）
+              prev = subprocess.run(['git', 'describe', '--tags', '--abbrev=0', 'HEAD^'],
+                                    capture_output=True, text=True).stdout.strip()
+              rng = f'{prev}..HEAD' if prev else 'HEAD'
+              log = subprocess.run(['git', 'log', '--pretty=format:- %s', rng],
+                                   capture_output=True, text=True).stdout.strip()
+              notes = log or f'NotifyHub {ver}'
+
+          print(notes)
           PY
           cat release-notes.md
 

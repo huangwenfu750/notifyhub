@@ -181,17 +181,7 @@ notify.upsertPlatform(PlatformConfig.newBuilder()
         .addTopics("ops.#").build());
 ```
 
-## 8. 测试
-
-```bash
-gradle :sdk-spring-boot:test
-```
-
-除了纯配置断言，还包含 4 个**端到端用例**（`NotifyHubSpringEndToEndTest`）：在进程内拉起真实 NotifyHub 服务端
-（`Server.create` + 随机端口）与真实 Spring 应用（走 `SpringApplication` 完整生命周期），
-用 JDK 内置 `HttpServer` 接收投递，验证「发布 → 平台收到 HTTP → 事件回灌 `@EventListener` → 去重 → 批量发布 → 健康检查」整条链路。
-
-## 9. 配置项
+## 8. 配置项
 
 | 配置 | 默认 | 说明 |
 |---|---|---|

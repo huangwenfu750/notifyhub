@@ -48,4 +48,4 @@ See [`config.example.yaml`](../config.example.yaml) for a complete example.
 
 The Admin RPCs (`UpsertPlatform/ListPlatforms/RemovePlatform`) add, change and remove platforms
 without a restart; platforms registered at runtime live only in memory, and after a restart
-the config file is authoritative again. Persistence and a web console are planned for V2.
+the config file is authoritative again.

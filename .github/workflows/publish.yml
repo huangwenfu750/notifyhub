@@ -1,18 +1,8 @@
 name: Publish
 
 # 发布各语言 SDK 到包管理平台，在 Release 发布后触发（也可手动跑）。
-#
-# npm / pnpm / yarn / bun 共用同一个 npm registry，下面这个 npm 任务发布一次即可让四者都能安装。
-#
-# 需要的仓库 Secrets（缺哪个就跳过哪个任务，不会让发布失败）：
-#   NPM_TOKEN           npmjs.com 的 Automations/Access Token
-#   PYPI_API_TOKEN      PyPI 的 API token（以 pypi- 开头）
-#   MAVEN_URL / MAVEN_USER / MAVEN_PASSWORD
-#                       其它 Maven 仓库（如 Maven Central 的 OSSRH staging 地址）
-#   MAVEN_SIGNING_KEY   GPG 私钥（Maven Central 强制要求）
-#   CENTRAL_USERNAME / CENTRAL_PASSWORD
-#                       Central Portal 的 User Token，用于自动上传 bundle（不配就只留构建产物）
-# GitHub Packages 用内置的 GITHUB_TOKEN，无需额外配置。
+# npm / pnpm / yarn / bun 共用同一个 npm registry，npm 任务发一次即可让四者都能安装。
+# 各任务缺 Secret 就跳过，不会让整个工作流失败；Secrets 清单见 docs/local/发布流程.md（本地文档）。
 
 # 注意：不能用 `release: published` —— Release 是用 GITHUB_TOKEN 建的，
 # 由 GITHUB_TOKEN 触发的事件不会级联触发其它工作流。改为监听 Release 工作流跑完。

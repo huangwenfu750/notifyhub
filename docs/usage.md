@@ -223,7 +223,7 @@ client.subscribe(["deadletter"], lambda e: print("投递失败:", e.params))
 - **至多一次**：不持久化、不重放、不补发。
 - 订阅者处理太慢 → 事件被丢弃（服务端每订阅一个队列，慢消费者不阻塞别人）。
 - 客户端断开即自动退订；也可用句柄主动 `cancel()` / `close()`。
-- 需要"不丢消息"的场景：请让订阅端把事件落到自己的存储里，或等 V2 的持久化投递。
+- 需要"不丢消息"的场景：请让订阅端把事件落到自己的存储里。
 
 ---
 
@@ -536,46 +536,17 @@ Admin 会校验 `name/type/webhook` 非空、`type` 必须是已注册渠道、`
 
 ---
 
-## 8. 测试与压测
-
-```bash
-gradle test                            # 单元 + E2E（WireMock 模拟平台 HTTP）
-```
-
-跨进程烟雾测试（四语言 SDK 对真实服务端）：
-
-```bash
-./server/build/install/server/bin/server --config smoke/config.yaml &
-
-.venv/Scripts/python.exe smoke/py_smoke.py            # Windows
-python3 smoke/py_smoke.py                             # Linux/macOS
-node smoke/node_smoke.js                              # 需先 cd sdks/typescript && npm run build
-gradle :sdk-java:smoke -Ptoken=ntf_smoke_token        # 可用 -Ptarget=host:port 覆盖
-cd smoke/go && go run .                               # Go SDK
-```
-
-吞吐基线（笔记本 CPU，Python 客户端压测，瓶颈在客户端）：约 **5.7k msg/s，p99=3.8ms**。服务端容量用 `ghz` 复测：
-
-```bash
-ghz --insecure -n 100000 -c 64 --call notify.v1.Notify/Publish \
-    -d '{"topic":"bench","title":"t","content":"c"}' -H "x-api-token: ntf_xxx" 127.0.0.1:9987
-```
-
-`scripts/bench.py` 是仓库自带的 Python 压测脚本。
-
----
-
-## 9. 已知边界（当前版本 0.1.1）
+## 8. 已知边界（当前版本 0.1.1）
 
 - 订阅为**至多一次**，不持久化、不重放；订阅端慢消费会丢事件。
 - 平台投递**异步、尽力而为**：`Publish` 返回 `accepted=true` 只代表已入队，不代表平台已收到。
 - Admin 注册的平台重启即失效。
-- 尚无 Web 控制台、无投递记录查询（V2 规划中）。
-- 浏览器直连需 gRPC-Web 网关（V2 规划中）。
+- 尚无 Web 控制台、无投递记录查询。
+- 浏览器直连需 gRPC-Web 网关。
 
 ---
 
-## 10. 三分钟上手清单
+## 9. 三分钟上手清单
 
 1. `./scripts/gen-protos.sh java && gradle :server:installDist`
 2. 写一份最小 `config.yaml`（见第 2 节：无鉴权 + 本地 webhook）
