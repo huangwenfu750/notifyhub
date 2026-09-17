@@ -208,8 +208,8 @@ Maven（`~/.m2/settings.xml`，`server.id` 必须与 `repository.id` 一致）�
 
 ## 发版流程（维护者）
 
-0. 改版本号 —— 散在 9 处（四个 Gradle 模块、打包脚本、Python 包定义、服务端常量、
-   TypeScript 包、示例工程依赖），一次改全：
+0. 改版本号 —— 散在 10 处（四个 Gradle 模块、打包脚本、Python 的 `pyproject.toml` 与
+   `__init__.py`、服务端常量、TypeScript 包、示例工程依赖），一次改全：
 
    ```bash
    python scripts/check-versions.py 0.2.0 --set   # 不带 --set 则只检查是否一致

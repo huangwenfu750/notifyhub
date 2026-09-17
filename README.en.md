@@ -211,9 +211,9 @@ variant, each with a `.sha256`.
 
 ## Release Process (maintainers)
 
-0. Bump the version — it lives in 9 places (four Gradle modules, the packaging script, the Python
-   package definition, the server constant, the TypeScript package, the example dependency), so
-   change them in one shot:
+0. Bump the version — it lives in 10 places (four Gradle modules, the packaging script, the Python
+   `pyproject.toml` and `__init__.py`, the server constant, the TypeScript package, the example
+   dependency), so change them in one shot:
 
    ```bash
    python scripts/check-versions.py 0.2.0 --set   # drop --set to only verify

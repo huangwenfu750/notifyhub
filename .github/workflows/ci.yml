@@ -38,7 +38,7 @@ jobs:
       - name: 校验 proto 副本与主契约一致
         run: diff proto/notify/v1/notify.proto sdks/typescript/proto/notify/v1/notify.proto
 
-      # 版本号散在 9 处，漏改一处就会出现「包是新版、服务端报旧版」
+      # 版本号散在 10 处，漏改一处就会出现「包是新版、服务端报旧版」
       - name: 校验版本号一致
         run: python scripts/check-versions.py
 
