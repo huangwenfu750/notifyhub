@@ -136,8 +136,8 @@ The step-by-step guide lives in [docs/usage.en.md](docs/usage.en.md) (Spring Boo
 | Go | `go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.0` | ✅ published (distributed via `sdks/go/v*` tags) |
 | Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.0")` | ✅ published to GitHub Packages |
 | Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")` | ✅ published to GitHub Packages |
-| TypeScript / JS | `npm i notifyhub-client` | ⏳ pending (npm / pnpm / yarn / bun share one registry) |
-| Python | `pip install notifyhub-client` | ⏳ pending |
+| TypeScript / JS | `npm i notifyhub-client` | ⏳ pending (name is free; blocked on `NPM_TOKEN` permissions) |
+| Python | `pip install notifyhub-client` | ✅ published (PyPI 0.1.0) |
 
 These coordinates are published to GitHub Packages only — **they are not on Maven Central**.
 A `Could not find artifact ... in central` error means the repository below is missing, not that the
@@ -215,8 +215,11 @@ variant, each with a `.sha256`.
    → `release.yml` builds the Linux packages in CI and creates the Release with the artifacts attached
 2. Also tag the Go submodule (the prefix must match the module path, otherwise `go get` fails):
    `git tag sdks/go/v0.2.0 && git push origin sdks/go/v0.2.0`
-3. `publish.yml` pushes the language packages once the Release exists. To enable npm / PyPI, add
-   `NPM_TOKEN` and `PYPI_API_TOKEN` under Settings → Secrets, then re-run that workflow.
+3. `publish.yml` pushes the language packages once the Release exists. PyPI already works; npm still
+   needs one thing — add `NPM_TOKEN` under Settings → Secrets, then re-run that workflow.
+   The token must carry publish rights (a Classic / Automation token from npmjs.com is the easy
+   route); a granular token with read-only scope fails with
+   `npm error 403 ... may not perform that action`.
 
 ## Build & Test
 

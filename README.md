@@ -135,8 +135,8 @@ client.upsert_platform(
 | Go | `go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.0` | ✅ 已发布（靠 `sdks/go/v*` 标签分发） |
 | Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.0")` | ✅ 已发布到 GitHub Packages |
 | Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")` | ✅ 已发布到 GitHub Packages |
-| TypeScript / JS | `npm i notifyhub-client` | ⏳ 待发布（npm / pnpm / yarn / bun 共用同一 registry） |
-| Python | `pip install notifyhub-client` | ⏳ 待发布 |
+| TypeScript / JS | `npm i notifyhub-client` | ⏳ 待发布（包名未被占用，卡在 `NPM_TOKEN` 权限） |
+| Python | `pip install notifyhub-client` | ✅ 已发布（PyPI 0.1.0） |
 
 这几个坐标**只发在 GitHub Packages，Maven Central 上没有**（`Could not find artifact ... in central`
 就是没声明这个仓库，不是版本写错）。取包前先加仓库 —— 该 registry 读写都要 token，匿名请求直接 401。
@@ -212,8 +212,10 @@ Maven（`~/.m2/settings.xml`，`server.id` 必须与 `repository.id` 一致）�
    → `release.yml` 在 CI 构建 Linux 发行包并创建 Release、附上产物
 2. 同时给 Go 子模块打标签（前缀必须与模块路径一致，缺了 `go get` 就取不到）：
    `git tag sdks/go/v0.2.0 && git push origin sdks/go/v0.2.0`
-3. Release 建好后 `publish.yml` 自动推送各语言包。要开通 npm / PyPI，
-   在仓库 Settings → Secrets 里加 `NPM_TOKEN`、`PYPI_API_TOKEN`，然后重跑该工作流即可。
+3. Release 建好后 `publish.yml` 自动推送各语言包。PyPI 已通；npm 还差一步 ——
+   在仓库 Settings → Secrets 里加 `NPM_TOKEN`，然后重跑该工作流即可。
+   token 必须带 publish 权限（npmjs.com 的 Classic / Automation Token 最省事）；
+   granular token 只给读权限会报 `npm error 403 ... may not perform that action`。
 
 ## 构建与测试
 
