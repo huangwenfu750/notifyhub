@@ -65,6 +65,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
+          # 重跑这个工作流时别因为 Release 已存在而失败（Go 模块标签 job 可能才需要补跑）
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::warning::Release $TAG 已存在，跳过创建（要重发请先 gh release delete $TAG）"
+            exit 0
+          fi
           # 只传 notifyhub-* ：build/linux/ 下还有打包时下载的 jre21.tar.gz，别一并传上去
           gh release create "$TAG" \
             --title "NotifyHub $TAG" \
@@ -101,8 +106,8 @@ jobs:
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
           set -euo pipefail
-          git fetch --depth=1 origin "refs/tags/$TAG:refs/tags/$TAG"
-          git checkout "refs/tags/$TAG" -- sdks/go
+          # 不重新 fetch：checkout 已经把触发用的标签取下来了，
+          # 再 fetch 到同名 ref 会被拒（would clobber existing tag）。
           missing=0
           for f in sdks/go/gen/notify/v1/notify.pb.go sdks/go/gen/notify/v1/notify_grpc.pb.go; do
             if [ ! -f "$f" ]; then
@@ -123,15 +128,19 @@ jobs:
           TAG: ${{ steps.v.outputs.tag }}
           GOTAG: ${{ steps.v.outputs.gotag }}
         run: |
+          set -euo pipefail
           SHA="$(git rev-parse "refs/tags/$TAG^{commit}")"
-          echo "sdks/go 标签指向 $SHA"
-          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$GOTAG" >/dev/null 2>&1; then
+          API="https://api.github.com/repos/$GITHUB_REPOSITORY"
+          AUTH=(-H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json")
+          echo "$GOTAG -> $SHA"
+          # 用 ls-remote 判存在：gh api 拼带斜杠的 ref 路径容易踩坑
+          if git ls-remote --exit-code --tags origin "refs/tags/$GOTAG" >/dev/null 2>&1; then
             echo "$GOTAG 已存在，强制更新"
-            gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/$GOTAG" \
-              -f sha="$SHA" -F force=true >/dev/null
+            curl -fsS -X PATCH "${AUTH[@]}" "$API/git/refs/tags/$GOTAG?force=true" \
+              -d "{\"sha\":\"$SHA\",\"force\":true}" >/dev/null
           else
-            gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" \
-              -f "ref=refs/tags/$GOTAG" -f sha="$SHA" >/dev/null
+            curl -fsS -X POST "${AUTH[@]}" "$API/git/refs" \
+              -d "{\"ref\":\"refs/tags/$GOTAG\",\"sha\":\"$SHA\"}" >/dev/null
             echo "已创建 $GOTAG"
           fi
 
