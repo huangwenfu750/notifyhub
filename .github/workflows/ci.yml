@@ -82,3 +82,20 @@ jobs:
           node smoke/node_smoke.js
           gradle :sdk-java:smoke -Ptoken=ntf_smoke_token
           cd smoke/go && go run .
+
+  examples:
+    name: 示例工程（走 mavenLocal）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+      - name: 生成 Java stub
+        run: bash scripts/gen-protos.sh java
+      # 示例工程从 mavenLocal 取 starter：发布配置（产物、POM、坐标）改坏时这里会先红
+      - name: 发布到本地仓库并编译示例
+        run: |
+          gradle publishNotifyHubToMavenLocal
+          cd examples/spring-boot && gradle build
