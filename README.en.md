@@ -134,9 +134,9 @@ The step-by-step guide lives in [docs/usage.en.md](docs/usage.en.md) (Spring Boo
 | Language | Install | Status |
 |---|---|---|
 | Go | `go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.1` | ✅ published (distributed via `sdks/go/v*` tags) |
-| Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.1")` | ✅ published to GitHub Packages |
-| Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")` | ✅ published to GitHub Packages |
-| TypeScript / JS | `npm i notifyhub-client` | ⏳ pending (name is free; blocked on `NPM_TOKEN` permissions) |
+| Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.1")` | ✅ on Maven Central (since 0.1.1) |
+| Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")` | ✅ on Maven Central (since 0.1.1) |
+| TypeScript / JS | `npm i notifyhub-client` | ✅ published (npm 0.1.1) |
 | Python | `pip install notifyhub-client` | ✅ published (PyPI 0.1.1) |
 
 > If `pip install` reports `No matching distribution found` while the version does exist on PyPI,
@@ -144,9 +144,22 @@ The step-by-step guide lives in [docs/usage.en.md](docs/usage.en.md) (Spring Boo
 > Point pip at the official index to work around it:
 > `pip install -i https://pypi.org/simple notifyhub-client`
 
-These coordinates are published to GitHub Packages only — **they are not on Maven Central**.
-A `Could not find artifact ... in central` error means the repository below is missing, not that the
-version is wrong. That registry requires a token even for reads (anonymous requests get 401).
+The Java artifacts also go to **Maven Central starting with 0.1.1** — plain `mavenCentral()` is
+enough, no token needed:
+
+```kotlin
+repositories { mavenCentral() }
+dependencies {
+    implementation("io.github.huangwenfu750:sdk-java:0.1.1")
+}
+```
+
+`protos` / `sdk-java` / `notifyhub-spring-boot-starter` all live under `io.github.huangwenfu750`,
+each shipping jar / sources / javadoc / pom / module with an `.asc` signature.
+
+> 0.1.0 went to GitHub Packages only and needs a PAT to fetch; upgrading to 0.1.1 removes all of
+> that. Keep the setup below only if you want GitHub Packages (e.g. CI snapshots) — that registry
+> requires a token even for reads (anonymous requests get 401).
 
 Gradle (Kotlin DSL):
 

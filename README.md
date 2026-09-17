@@ -133,17 +133,29 @@ client.upsert_platform(
 | 语言 | 安装方式 | 状态 |
 |---|---|---|
 | Go | `go get github.com/huangwenfu750/notifyhub/sdks/go@v0.1.1` | ✅ 已发布（靠 `sdks/go/v*` 标签分发） |
-| Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.1")` | ✅ 已发布到 GitHub Packages |
-| Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")` | ✅ 已发布到 GitHub Packages |
-| TypeScript / JS | `npm i notifyhub-client` | ⏳ 待发布（包名未被占用，卡在 `NPM_TOKEN` 权限） |
+| Java / Kotlin | `implementation("io.github.huangwenfu750:sdk-java:0.1.1")` | ✅ 已在 Maven Central（0.1.1 起） |
+| Spring Boot | `implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")` | ✅ 已在 Maven Central（0.1.1 起） |
+| TypeScript / JS | `npm i notifyhub-client` | ✅ 已发布（npm 0.1.1） |
 | Python | `pip install notifyhub-client` | ✅ 已发布（PyPI 0.1.1） |
 
 > 若 `pip install` 报 `No matching distribution found`，而 PyPI 上确实已有该版本，基本是国内镜像还没同步
 > （实测 `mirrors.aliyun.com` 对新包会滞后）。指定官方源即可绕开：
 > `pip install -i https://pypi.org/simple notifyhub-client`
 
-这几个坐标**只发在 GitHub Packages，Maven Central 上没有**（`Could not find artifact ... in central`
-就是没声明这个仓库，不是版本写错）。取包前先加仓库 —— 该 registry 读写都要 token，匿名请求直接 401。
+Java 侧从 **0.1.1 起同时发到 Maven Central**，只要 `mavenCentral()` 就能取到，不需要任何 token：
+
+```kotlin
+repositories { mavenCentral() }
+dependencies {
+    implementation("io.github.huangwenfu750:sdk-java:0.1.1")
+}
+```
+
+`protos` / `sdk-java` / `notifyhub-spring-boot-starter` 三个坐标都在
+`io.github.huangwenfu750` 下，jar / sources / javadoc / pom / module 五种产物各带 `.asc` 签名。
+
+> 0.1.0 只发在 GitHub Packages，需要 PAT 才能取；升级到 0.1.1 就不用管这些了。
+> 仍想用 GitHub Packages（比如取 CI 上的快照）按下面配置 —— 该 registry 读写都要 token，匿名请求直接 401。
 
 Gradle（Kotlin DSL）：
 

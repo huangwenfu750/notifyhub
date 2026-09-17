@@ -12,18 +12,24 @@ Inside this repo:
 implementation(project(":sdk-spring-boot"))
 ```
 
-External projects (run `gradle publishNotifyHubToMavenLocal` first — it publishes `protos`,
-`sdk-java` and the starter to the local repository together):
+External projects — **on Maven Central since 0.1.1**, no token needed:
+
+```kotlin
+repositories { mavenCentral() }
+
+implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")
+```
+
+Or use the local repository (run `gradle publishNotifyHubToMavenLocal` first — it publishes
+`protos`, `sdk-java` and the starter together):
 
 ```kotlin
 repositories { mavenLocal() }
 
-implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")
+implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")
 ```
 
-Or pull it straight from GitHub Packages (**this coordinate is not on Maven Central** — a
-`Could not find ... in central` error means the repository is not declared; that registry needs a
-token even for reads):
+Or pull it straight from GitHub Packages (that registry needs a token even for reads):
 
 ```kotlin
 repositories {

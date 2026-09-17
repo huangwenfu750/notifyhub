@@ -12,16 +12,23 @@
 implementation(project(":sdk-spring-boot"))
 ```
 
-外部项目（先 `gradle publishNotifyHubToMavenLocal`，该任务会连同 `protos`、`sdk-java` 一起发到本地仓库）：
+外部项目（**0.1.1 起已在 Maven Central**，无需 token）：
+
+```kotlin
+repositories { mavenCentral() }
+
+implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")
+```
+
+或者走本地仓库（先 `gradle publishNotifyHubToMavenLocal`，该任务会连同 `protos`、`sdk-java` 一起发到本地）：
 
 ```kotlin
 repositories { mavenLocal() }
 
-implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.0")
+implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")
 ```
 
-也可以直接从 GitHub Packages 取（**这个坐标不在 Maven Central 上**，报
-`Could not find ... in central` 就是没声明该仓库；该 registry 读也要 token）：
+也可以直接从 GitHub Packages 取（该 registry 读也要 token）：
 
 ```kotlin
 repositories {

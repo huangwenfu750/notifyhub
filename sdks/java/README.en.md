@@ -7,13 +7,13 @@ A thin gRPC wrapper with no Spring dependency (Spring Boot users should use
 
 ```kotlin
 implementation(project(":sdk-java"))                              // inside this repo
-implementation("io.github.huangwenfu750:sdk-java:0.1.0")                     // external projects
+implementation("io.github.huangwenfu750:sdk-java:0.1.1")                     // external projects
 ```
 
-> For external projects, pick one: ① run `gradle publishNotifyHubToMavenLocal` in this repo and add
-> `repositories { mavenLocal() }` on the consumer side; ② pull from GitHub Packages — this coordinate
-> is **not on Maven Central**, so `Could not find ... in central` simply means that repository is not
-> declared (reads need a `read:packages` token too). Snippets live in
+> Since 0.1.1 this is on **Maven Central**, so external projects only need
+> `repositories { mavenCentral() }` — no token. Two alternatives: ① run
+> `gradle publishNotifyHubToMavenLocal` in this repo and add `mavenLocal()` on the consumer side;
+> ② pull from GitHub Packages (reads need a `read:packages` token too). Snippets live in
 > [README.en.md](../../README.en.md#install-the-sdks-package-registries).
 
 ## Usage

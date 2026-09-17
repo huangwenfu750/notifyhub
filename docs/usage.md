@@ -324,9 +324,10 @@ client.close();
 
 ### 5.3 Java
 
-Gradle 依赖（本仓库内可直接 `implementation(project(":sdk-java"))`；外部工程二选一：先
-`gradle publishNotifyHubToMavenLocal` 后加 `repositories { mavenLocal() }`，或声明 GitHub Packages
-仓库 —— 该坐标**不在 Maven Central 上**，写法见 [README.md](../README.md#安装-sdk包管理平台)）：
+Gradle 依赖（本仓库内可直接 `implementation(project(":sdk-java"))`；外部工程 **0.1.1 起已在
+Maven Central**，只写 `repositories { mavenCentral() }` 即可。另外两条路：`gradle
+publishNotifyHubToMavenLocal` + `mavenLocal()`，或声明 GitHub Packages 仓库 —— 写法见
+[README.md](../README.md#安装-sdk包管理平台)）：
 
 ```kotlin
 implementation("io.github.huangwenfu750:sdk-java:0.1.1")
@@ -422,14 +423,15 @@ client.UpsertPlatform(ctx, &v1.PlatformConfig{
 ```kotlin
 implementation(project(":sdk-spring-boot"))   // 仓库内
 
-// 外部项目（二选一）：
-// 1) 本地仓库：先 gradle publishNotifyHubToMavenLocal，再 repositories { mavenLocal() }
-// 2) GitHub Packages：该坐标不在 Maven Central 上，需声明仓库 + 带 read:packages 的 token
+// 外部项目（三选一）：
+// 1) Maven Central（0.1.1 起，推荐）：repositories { mavenCentral() }，无需 token
+// 2) 本地仓库：先 gradle publishNotifyHubToMavenLocal，再 repositories { mavenLocal() }
+// 3) GitHub Packages：需声明仓库 + 带 read:packages 的 token
 implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")
 ```
 
-> 报 `Could not find artifact ... in central` / `Could not find io.github...:0.1.1` 时，
-> 说明只配了 Maven Central。仓库与凭据写法见 [README.md](../README.md#安装-sdk包管理平台)。
+> 报 `Could not find artifact ... in central` 时，先确认版本号 —— 0.1.0 只发在 GitHub Packages，
+> Maven Central 上从 0.1.1 才有。仓库与凭据写法见 [README.md](../README.md#安装-sdk包管理平台)。
 
 `application.yml`：
 

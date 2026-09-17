@@ -347,9 +347,10 @@ client.close();
 ### 5.3 Java
 
 Gradle dependency (inside this repo you can simply use `implementation(project(":sdk-java"))`; for
-external projects pick one — run `gradle publishNotifyHubToMavenLocal` and add
-`repositories { mavenLocal() }`, or declare the GitHub Packages repository, since this coordinate is
-**not on Maven Central**; see [README.en.md](../README.en.md#install-the-sdks-package-registries)):
+external projects it is on **Maven Central since 0.1.1**, so `repositories { mavenCentral() }`
+suffices. Otherwise run `gradle publishNotifyHubToMavenLocal` and add `repositories { mavenLocal() }`,
+or declare the GitHub Packages repository; see
+[README.en.md](../README.en.md#install-the-sdks-package-registries)):
 
 ```kotlin
 implementation("io.github.huangwenfu750:sdk-java:0.1.1")
@@ -449,14 +450,14 @@ The repo ships a starter: `sdks/spring-boot` (`io.github.huangwenfu750:notifyhub
 implementation(project(":sdk-spring-boot"))   // inside this repo
 
 // External projects (pick one):
-// 1) local repo: run gradle publishNotifyHubToMavenLocal, then repositories { mavenLocal() }
-// 2) GitHub Packages: this coordinate is not on Maven Central — declare the repo and pass a
-//    read:packages token
+// 1) Maven Central (since 0.1.1, recommended): repositories { mavenCentral() }, no token needed
+// 2) local repo: run gradle publishNotifyHubToMavenLocal, then repositories { mavenLocal() }
+// 3) GitHub Packages: declare the repo and pass a read:packages token
 implementation("io.github.huangwenfu750:notifyhub-spring-boot-starter:0.1.1")
 ```
 
-> `Could not find artifact ... in central` / `Could not find io.github...:0.1.1` means only Maven
-> Central is configured. Repository and credential snippets live in
+> `Could not find artifact ... in central` usually means a wrong version: 0.1.0 only went to GitHub
+> Packages, Maven Central starts at 0.1.1. Repository and credential snippets live in
 > [README.en.md](../README.en.md#install-the-sdks-package-registries).
 
 `application.yml`:

@@ -6,13 +6,12 @@ gRPC 薄封装，无 Spring 依赖（Spring Boot 用户请用 [`sdks/spring-boot
 
 ```kotlin
 implementation(project(":sdk-java"))                              // 仓库内
-implementation("io.github.huangwenfu750:sdk-java:0.1.0")                     // 外部工程
+implementation("io.github.huangwenfu750:sdk-java:0.1.1")                     // 外部工程
 ```
 
-> 外部工程取包二选一：
-> ① 先在本仓库跑 `gradle publishNotifyHubToMavenLocal`，使用方加 `repositories { mavenLocal() }`；
-> ② 直接拉 GitHub Packages —— 该坐标**不在 Maven Central 上**，报 `Could not find ... in central`
-> 就是没声明那个仓库（读也要带 `read:packages` 的 token），写法见
+> 0.1.1 起已发到 **Maven Central**，外部工程只写 `repositories { mavenCentral() }` 即可，无需 token。
+> 另外两条路：① 先在本仓库跑 `gradle publishNotifyHubToMavenLocal`，使用方加 `mavenLocal()`；
+> ② 拉 GitHub Packages（读也要带 `read:packages` 的 token），写法见
 > [README.md](../../README.md#安装-sdk包管理平台)。
 
 ## 用法
