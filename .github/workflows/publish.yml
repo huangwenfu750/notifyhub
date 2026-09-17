@@ -48,11 +48,21 @@ jobs:
           fi
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
           cd sdks/typescript
-          # 403 几乎都是 token 权限不够，直说原因比让人去翻 npm 的长日志强
-          if ! npm publish --access public; then
-            echo "::error::npm publish 失败。若日志里有 403 'You may not perform that action'，说明 NPM_TOKEN 没有发布权限：换成 npmjs.com 的 Classic / Automation token，或给 granular token 勾上 Read and write（且不要限定到别的包）"
-            exit 1
+          # npm 不允许覆盖已发布的版本号，重跑同一个版本必然 403。
+          # 这属于「已经发过了」，按成功处理，否则每次重跑工作流都是一片红。
+          set +e
+          OUT="$(npm publish --access public 2>&1)"
+          CODE=$?
+          set -e
+          echo "$OUT"
+          if [ $CODE -eq 0 ]; then exit 0; fi
+          if echo "$OUT" | grep -q "previously published"; then
+            echo "::warning::该版本在 npm 上已存在，跳过（npm 不允许覆盖同名版本）"
+            exit 0
           fi
+          # 剩下的 403 基本都是 token 权限不够，直说原因比让人去翻 npm 的长日志强
+          echo "::error::npm publish 失败。若日志里有 403 'You may not perform that action'，说明 NPM_TOKEN 没有发布权限：换成 npmjs.com 的 Classic / Automation token，或给 granular token 勾上 Read and write（且不要限定到别的包）"
+          exit 1
 
   pypi:
     name: PyPI
@@ -217,6 +227,7 @@ jobs:
           }
 
           # 阶段一：等校验（PENDING -> VALIDATING -> VALIDATED / FAILED）
+          # 校验一般 1~3 分钟，给 13 分钟余量
           for i in $(seq 1 40); do
             S="$(state)"; echo "[$i/40] $S"
             case "$S" in
@@ -243,8 +254,10 @@ jobs:
           fi
 
           # 阶段三：等落地（PUBLISHING -> PUBLISHED / FAILED）
-          for i in $(seq 1 40); do
-            S="$(state)"; echo "[$i/40] $S"
+          # PUBLISHING 是正常中间态：Central 要把产物推到 repo1 并等 CDN 生效，
+          # 实测 15~30 分钟都算正常，这里给 40 分钟。10 分钟就放弃会误报失败。
+          for i in $(seq 1 80); do
+            S="$(state)"; echo "[$i/80] $S"
             case "$S" in
               PUBLISHED) break ;;
               FAILED)
@@ -252,10 +265,10 @@ jobs:
                 echo "::error::发布到 Maven Central 失败"
                 exit 1 ;;
             esac
-            sleep 15
+            sleep 30
           done
           if [ "$S" != "PUBLISHED" ]; then
-            echo "::error::等了 10 分钟仍未 PUBLISHED（当前 '$S'）"
+            echo "::error::等了 40 分钟仍未 PUBLISHED（当前 '$S'）"
             exit 1
           fi
           echo "已发布到 Maven Central"

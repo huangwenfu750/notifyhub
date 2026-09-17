@@ -12,6 +12,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
   every secret the release pipelines need
 - `.gitignore` excludes `*.asc` so an exported GPG private key can never be committed by accident
 
+### Fixed
+
+- `publish.yml`: the Maven Central job now finishes the job — poll until VALIDATED, `POST
+  /deployment/<id>`, then wait for PUBLISHED — so no Portal click is needed. It used to stop at
+  VALIDATED, which looks like success while repo1.maven.org stays 404
+- `publish.yml`: an npm E403 for an already-published version is treated as success (npm never
+  allows overwriting a version), so re-runs no longer fail spuriously
+
 ## [0.1.1] - 2026-09-17
 
 ### Added

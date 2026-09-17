@@ -11,6 +11,14 @@
   导出私钥填 Secret），并列出各平台发布所需的 Secrets 一览表
 - `.gitignore` 排除 `*.asc`，防止导出的 GPG 私钥被误提交
 
+### 修复
+
+- `publish.yml`：Maven Central 上传后自动走完发布（轮询到 VALIDATED → `POST /deployment/<id>`
+  → 等到 PUBLISHED），不再需要进 Portal 人工点 Publish。
+  之前只到 VALIDATED 就结束，`repo1.maven.org` 上一直是 404，看着像发布成功其实没发出去
+- `publish.yml`：npm 对已存在的版本号报 E403 时按成功处理（npm 不允许覆盖同名版本），
+  重跑工作流不再误报失败
+
 ## [0.1.1] - 2026-09-17
 
 ### 新增
