@@ -184,16 +184,20 @@ jobs:
             echo "::warning::未配置 CENTRAL_USERNAME / CENTRAL_PASSWORD（Portal User Token），跳过上传"
             exit 0
           fi
-          # 不用 curl -f：它会把 4xx/5xx 的响应体一起吞掉，500 时完全看不出原因
+          # 两个坑：
+          # 1) 路径是 /api/v1/publisher/upload，不是 v3 —— v3 不存在，POST 过去一律 500 且无响应体
+          # 2) 认证是 Authorization: Bearer <base64(用户名:口令)>，不是 HTTP Basic（curl -u）
+          # 不用 curl -f：它会把 4xx/5xx 的响应体一起吞掉，出错时完全看不出原因
+          AUTH="$(printf '%s:%s' "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 -w 0)"
           RESP="$(mktemp)"
           CODE="$(curl -sS -o "$RESP" -w '%{http_code}' \
-            -u "$CENTRAL_USERNAME:$CENTRAL_PASSWORD" \
+            -H "Authorization: Bearer $AUTH" \
             -F "bundle=@$(ls build/central/*.zip)" \
-            "https://central.sonatype.com/api/v3/publisher/upload?publishingType=USER_MANAGED")"
+            "https://central.sonatype.com/api/v1/publisher/upload?publishingType=USER_MANAGED")"
           echo "HTTP $CODE"
           cat "$RESP"; echo
-          if [ "$CODE" != 200 ] && [ "$CODE" != 201 ]; then
-            echo "::error::上传失败（HTTP $CODE），响应体见上"
+          if [ "$CODE" != 201 ]; then
+            echo "::error::上传失败（HTTP $CODE）。201 才是成功；401 = User Token 无效或已轮换；400 = bundle 校验不通过"
             exit 1
           fi
-          echo "已上传，到 Portal → Deployments 校验通过后点 Publish 才真正对外可见"
+          echo "已上传，deploymentId 见上；到 Portal → Deployments 校验通过后点 Publish 才真正对外可见"

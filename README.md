@@ -342,7 +342,10 @@ gradle publishNotifyHubToCentralBundle
 （不设 `MAVEN_SIGNING_KEY` 就出无签名版本，本地自测够用，Central 会拒收）。
 
 上传：Portal → Deployments → Upload 选这个 zip，校验通过后 Publish；或走 API
-`POST https://central.sonatype.com/api/v3/publisher/upload`（Basic 认证用 User Token）。
+`POST https://central.sonatype.com/api/v1/publisher/upload`（注意是 **v1**，`v3` 不存在，
+POST 过去只会得到无响应体的 500）。认证不是 Basic，而是
+`Authorization: Bearer $(printf '%s:%s' "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 -w 0)`；
+返回 201 且响应体是 deploymentId。
 **已发布过的版本号不能覆盖**，重发前先 bump 版本。
 
 打 `v*` 标签后 `publish.yml` 也会构建同一个 zip，挂在 workflow artifact `maven-central-bundle` 上

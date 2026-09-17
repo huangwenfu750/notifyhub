@@ -359,7 +359,10 @@ Each module ships `jar` / `-sources.jar` / `-javadoc.jar` / `pom` / `module`, ev
 `.asc`. Without `MAVEN_SIGNING_KEY` you get an unsigned bundle (fine locally, rejected by Central).
 
 Upload it via Portal → Deployments → Upload, then Publish once validation passes; or call
-`POST https://central.sonatype.com/api/v3/publisher/upload` with the User Token as Basic auth.
+`POST https://central.sonatype.com/api/v1/publisher/upload` — note **v1**; `v3` does not exist and a
+POST there returns a 500 with an empty body. Authentication is not Basic: send
+`Authorization: Bearer $(printf '%s:%s' "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 -w 0)`.
+A successful upload returns 201 with the deploymentId as the body.
 **A released version can never be overwritten** — bump the version before re-publishing.
 
 Pushing a `v*` tag also makes `publish.yml` build the same zip and attach it as the
