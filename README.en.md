@@ -211,6 +211,17 @@ variant, each with a `.sha256`.
 
 ## Release Process (maintainers)
 
+0. Bump the version — it lives in 9 places (four Gradle modules, the packaging script, the Python
+   package definition, the server constant, the TypeScript package, the example dependency), so
+   change them in one shot:
+
+   ```bash
+   python scripts/check-versions.py 0.2.0 --set   # drop --set to only verify
+   ```
+
+   The script only lists version mentions inside docs (they can be historical notes like "since
+   x.y.z"); those are left for manual review.
+
 1. `git tag v0.2.0 && git push origin v0.2.0`
    → `release.yml` builds the Linux packages in CI and creates the Release with the artifacts attached
 2. Also tag the Go submodule (the prefix must match the module path, otherwise `go get` fails):

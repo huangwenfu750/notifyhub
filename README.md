@@ -208,6 +208,15 @@ Maven（`~/.m2/settings.xml`，`server.id` 必须与 `repository.id` 一致）�
 
 ## 发版流程（维护者）
 
+0. 改版本号 —— 散在 9 处（四个 Gradle 模块、打包脚本、Python 包定义、服务端常量、
+   TypeScript 包、示例工程依赖），一次改全：
+
+   ```bash
+   python scripts/check-versions.py 0.2.0 --set   # 不带 --set 则只检查是否一致
+   ```
+
+   文档里提到版本号的地方脚本只列出来、不自动改（可能是「自某版本起」这类历史表述），需人工确认。
+
 1. `git tag v0.2.0 && git push origin v0.2.0`
    → `release.yml` 在 CI 构建 Linux 发行包并创建 Release、附上产物
 2. 同时给 Go 子模块打标签（前缀必须与模块路径一致，缺了 `go get` 就取不到）：
