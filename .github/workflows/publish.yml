@@ -90,7 +90,19 @@ jobs:
           MAVEN_URL: https://maven.pkg.github.com/huangwenfu750/notifyhub
           MAVEN_USER: ${{ github.actor }}
           MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-        run: gradle publishNotifyHub
+        run: |
+          # 该 registry 不允许覆盖已发布的版本，重跑会 409；先探测，已存在就跳过，避免无谓红灯
+          VER=$(sed -n 's/^version = "\(.*\)"/\1/p' protos/build.gradle.kts)
+          for a in protos sdk-java notifyhub-spring-boot-starter; do
+            url="https://maven.pkg.github.com/${GITHUB_REPOSITORY}/io/github/huangwenfu750/${a}/${VER}/${a}-${VER}.pom"
+            code=$(curl -sL -o /dev/null -w '%{http_code}' -u "${MAVEN_USER}:${MAVEN_PASSWORD}" "$url")
+            echo "${a} ${VER} -> ${code}"
+            if [ "$code" = "200" ]; then
+              echo "::warning::${a} ${VER} 已在 GitHub Packages 上，跳过发布（要重发请先 bump 版本）"
+              exit 0
+            fi
+          done
+          gradle publishNotifyHub
 
   maven-remote:
     name: Maven (其它远端仓库)
