@@ -165,6 +165,15 @@ jobs:
           retention-days: 30
       # 配了 Portal User Token 就顺手上传，否则只在上面的 artifact 里留着手动下载。
       # 默认 USER_MANAGED：上传后仍需到 Portal 点 Publish，留一次反悔机会。
+      # 上传被拒时先看这里：签名文件是否齐全（每个 jar/pom 都要有 .asc）
+      - name: 列出 bundle 内容
+        run: |
+          ZIP="$(ls build/central/*.zip)"
+          echo "bundle: $ZIP"
+          unzip -l "$ZIP" | sed -n '1,8p;$p'
+          echo "--- .asc 文件数 ---"
+          unzip -l "$ZIP" | grep -c '\.asc$' || true
+
       - name: 上传到 Central Portal（可选）
         continue-on-error: true
         env:
@@ -175,8 +184,16 @@ jobs:
             echo "::warning::未配置 CENTRAL_USERNAME / CENTRAL_PASSWORD（Portal User Token），跳过上传"
             exit 0
           fi
-          curl -f --retry 3 --retry-delay 10 \
+          # 不用 curl -f：它会把 4xx/5xx 的响应体一起吞掉，500 时完全看不出原因
+          RESP="$(mktemp)"
+          CODE="$(curl -sS -o "$RESP" -w '%{http_code}' \
             -u "$CENTRAL_USERNAME:$CENTRAL_PASSWORD" \
             -F "bundle=@$(ls build/central/*.zip)" \
-            "https://central.sonatype.com/api/v3/publisher/upload?publishingType=USER_MANAGED"
+            "https://central.sonatype.com/api/v3/publisher/upload?publishingType=USER_MANAGED")"
+          echo "HTTP $CODE"
+          cat "$RESP"; echo
+          if [ "$CODE" != 200 ] && [ "$CODE" != 201 ]; then
+            echo "::error::上传失败（HTTP $CODE），响应体见上"
+            exit 1
+          fi
           echo "已上传，到 Portal → Deployments 校验通过后点 Publish 才真正对外可见"
