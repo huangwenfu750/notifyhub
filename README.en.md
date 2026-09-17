@@ -358,17 +358,28 @@ gradle publishNotifyHubToCentralBundle
 Each module ships `jar` / `-sources.jar` / `-javadoc.jar` / `pom` / `module`, every one with an
 `.asc`. Without `MAVEN_SIGNING_KEY` you get an unsigned bundle (fine locally, rejected by Central).
 
-Upload it via Portal → Deployments → Upload, then Publish once validation passes; or call
+Upload via the API:
 `POST https://central.sonatype.com/api/v1/publisher/upload` — note **v1**; `v3` does not exist and a
 POST there returns a 500 with an empty body. Authentication is not Basic: send
 `Authorization: Bearer $(printf '%s:%s' "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 -w 0)`.
 A successful upload returns 201 with the deploymentId as the body.
 **A released version can never be overwritten** — bump the version before re-publishing.
 
-Pushing a `v*` tag also makes `publish.yml` build the same zip and attach it as the
-`maven-central-bundle` workflow artifact (kept 30 days). Add the `CENTRAL_USERNAME` /
-`CENTRAL_PASSWORD` secrets (Portal User Token) and CI uploads it too — with `USER_MANAGED`, so a
-human Publish is still required.
+Pushing a `v*` tag also makes `publish.yml` build the same zip (also attached as the
+`maven-central-bundle` artifact, kept 30 days). With the `CENTRAL_USERNAME` / `CENTRAL_PASSWORD`
+secrets (Portal User Token) set, CI runs the whole chain — **upload → wait for VALIDATED →
+auto-Publish → wait for PUBLISHED** — so no Portal click is needed; any failure turns the job red
+and prints the full status payload. Without those secrets it only keeps the artifact and skips.
+
+Three Publisher API traps:
+
+1. The path is `v1`, not `v3`.
+2. Auth is `Authorization: Bearer <base64(username:password)>`, not HTTP Basic (`curl -u`).
+3. `/status` is **POST**, not GET — a GET returns 401 `Invalid token`, which looks like a dead token
+   but is really the wrong method. States flow
+   `PENDING → VALIDATING → VALIDATED → (POST /deployment/<id>) → PUBLISHING → PUBLISHED`;
+   `VALIDATED` only means "passed validation, waiting for you", and nothing is visible on
+   repo1.maven.org yet.
 
 Cross-process smoke tests (the four language SDKs against a real server):
 

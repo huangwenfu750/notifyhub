@@ -163,9 +163,6 @@ jobs:
           path: build/central/*.zip
           if-no-files-found: error
           retention-days: 30
-      # 配了 Portal User Token 就顺手上传，否则只在上面的 artifact 里留着手动下载。
-      # 默认 USER_MANAGED：上传后仍需到 Portal 点 Publish，留一次反悔机会。
-      # 上传被拒时先看这里：签名文件是否齐全（每个 jar/pom 都要有 .asc）
       - name: 列出 bundle 内容
         run: |
           ZIP="$(ls build/central/*.zip)"
@@ -174,30 +171,91 @@ jobs:
           echo "--- .asc 文件数 ---"
           unzip -l "$ZIP" | grep -c '\.asc$' || true
 
-      - name: 上传到 Central Portal（可选）
-        continue-on-error: true
+      # 配了 Portal User Token 就上传 + 自动发布；没配就只留 artifact 供手动下载。
+      # USER_MANAGED 下上传完只是 VALIDATED，必须再 POST /deployment/<id> 才真正对外可见
+      # —— 少了这一步，repo1.maven.org 上会一直是 404，很容易误以为发布成功了。
+      - name: 上传并发布到 Central Portal（可选）
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
         run: |
+          set -uo pipefail
           if [ -z "$CENTRAL_USERNAME" ]; then
             echo "::warning::未配置 CENTRAL_USERNAME / CENTRAL_PASSWORD（Portal User Token），跳过上传"
             exit 0
           fi
-          # 两个坑：
+          # 三个坑：
           # 1) 路径是 /api/v1/publisher/upload，不是 v3 —— v3 不存在，POST 过去一律 500 且无响应体
           # 2) 认证是 Authorization: Bearer <base64(用户名:口令)>，不是 HTTP Basic（curl -u）
+          # 3) /status 是 POST 不是 GET —— 用 GET 会拿到 401 Invalid token，看着像 token 失效
           # 不用 curl -f：它会把 4xx/5xx 的响应体一起吞掉，出错时完全看不出原因
+          API="https://central.sonatype.com/api/v1/publisher"
           AUTH="$(printf '%s:%s' "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 -w 0)"
           RESP="$(mktemp)"
+
           CODE="$(curl -sS -o "$RESP" -w '%{http_code}' \
             -H "Authorization: Bearer $AUTH" \
             -F "bundle=@$(ls build/central/*.zip)" \
-            "https://central.sonatype.com/api/v1/publisher/upload?publishingType=USER_MANAGED")"
+            "$API/upload?publishingType=USER_MANAGED")"
           echo "HTTP $CODE"
           cat "$RESP"; echo
           if [ "$CODE" != 201 ]; then
             echo "::error::上传失败（HTTP $CODE）。201 才是成功；401 = User Token 无效或已轮换；400 = bundle 校验不通过"
             exit 1
           fi
-          echo "已上传，deploymentId 见上；到 Portal → Deployments 校验通过后点 Publish 才真正对外可见"
+          DEP="$(tr -d ' \t\r\n' < "$RESP")"
+          echo "deploymentId=$DEP"
+
+          state() {
+            curl -sS -X POST -H "Authorization: Bearer $AUTH" "$API/status?id=$DEP" \
+              | grep -o '"deploymentState":"[A-Z_]*"' | head -1 | cut -d'"' -f4
+          }
+          dump() {
+            echo "--- status 详情 ---"
+            curl -sS -X POST -H "Authorization: Bearer $AUTH" "$API/status?id=$DEP"
+            echo
+          }
+
+          # 阶段一：等校验（PENDING -> VALIDATING -> VALIDATED / FAILED）
+          for i in $(seq 1 40); do
+            S="$(state)"; echo "[$i/40] $S"
+            case "$S" in
+              VALIDATED) break ;;
+              FAILED)
+                dump
+                echo "::error::bundle 校验失败。常见原因：缺 .asc 签名 / sources / javadoc，或 POM 元数据不全"
+                exit 1 ;;
+            esac
+            sleep 15
+          done
+          if [ "$S" != "VALIDATED" ]; then
+            echo "::error::等了 10 分钟仍是 '$S'，放弃。到 Portal → Deployments 看 $DEP"
+            exit 1
+          fi
+
+          # 阶段二：显式发布（USER_MANAGED 的必经一步）
+          PCODE="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer $AUTH" "$API/deployment/$DEP")"
+          echo "publish HTTP $PCODE（204 = 已触发发布）"
+          if [ "$PCODE" != 204 ]; then
+            echo "::error::发布失败（HTTP $PCODE）。VALIDATED 状态下应为 204"
+            exit 1
+          fi
+
+          # 阶段三：等落地（PUBLISHING -> PUBLISHED / FAILED）
+          for i in $(seq 1 40); do
+            S="$(state)"; echo "[$i/40] $S"
+            case "$S" in
+              PUBLISHED) break ;;
+              FAILED)
+                dump
+                echo "::error::发布到 Maven Central 失败"
+                exit 1 ;;
+            esac
+            sleep 15
+          done
+          if [ "$S" != "PUBLISHED" ]; then
+            echo "::error::等了 10 分钟仍未 PUBLISHED（当前 '$S'）"
+            exit 1
+          fi
+          echo "已发布到 Maven Central"

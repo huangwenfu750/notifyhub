@@ -341,16 +341,26 @@ gradle publishNotifyHubToCentralBundle
 每个模块在包里是 `jar` / `-sources.jar` / `-javadoc.jar` / `pom` / `module` 各一份并带 `.asc`
 （不设 `MAVEN_SIGNING_KEY` 就出无签名版本，本地自测够用，Central 会拒收）。
 
-上传：Portal → Deployments → Upload 选这个 zip，校验通过后 Publish；或走 API
+上传走 API
 `POST https://central.sonatype.com/api/v1/publisher/upload`（注意是 **v1**，`v3` 不存在，
 POST 过去只会得到无响应体的 500）。认证不是 Basic，而是
 `Authorization: Bearer $(printf '%s:%s' "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 -w 0)`；
 返回 201 且响应体是 deploymentId。
 **已发布过的版本号不能覆盖**，重发前先 bump 版本。
 
-打 `v*` 标签后 `publish.yml` 也会构建同一个 zip，挂在 workflow artifact `maven-central-bundle` 上
-（保留 30 天）；再配上 Secrets `CENTRAL_USERNAME` / `CENTRAL_PASSWORD`（Portal User Token），
-CI 会顺手上传，默认 `USER_MANAGED` —— 仍要人工 Publish。
+打 `v*` 标签后 `publish.yml` 会构建同一个 zip（也挂在 workflow artifact `maven-central-bundle` 上，
+保留 30 天）。配了 Secrets `CENTRAL_USERNAME` / `CENTRAL_PASSWORD`（Portal User Token）时，
+CI 会一路走完 **上传 → 等校验（VALIDATED）→ 自动 Publish → 等到 PUBLISHED**，
+不需要再进 Portal 点按钮；任何一步失败都会让 job 变红并打印 status 详情。
+没配这两个 Secret 就只留 artifact、跳过上传。
+
+Publisher API 的三个坑：
+
+1. 路径是 `v1`，不是 `v3`（`v3` 不存在）。
+2. 认证是 `Authorization: Bearer <base64(用户名:口令)>`，不是 HTTP Basic（`curl -u`）。
+3. `/status` 是 **POST** 不是 GET —— 用 GET 会拿到 401 `Invalid token`，看着像 token 失效，实际是方法不对。
+   状态流转：`PENDING → VALIDATING → VALIDATED →（POST /deployment/<id>）→ PUBLISHING → PUBLISHED`，
+   `VALIDATED` 只是「校验通过等你发布」，此时 repo1.maven.org 上查不到任何东西。
 
 跨进程烟雾测试（Java/Python/Node/Go 四语言 SDK 对真实服务端）：
 
