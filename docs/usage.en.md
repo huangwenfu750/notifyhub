@@ -347,8 +347,13 @@ client.close();
 ### 5.3 Java
 
 Gradle dependency (inside this repo you can simply use `implementation(project(":sdk-java"))`; for
-external projects run `gradle publishNotifyHubToMavenLocal` first, then reference
-`io.github.huangwenfu750:sdk-java:0.1.0`):
+external projects pick one — run `gradle publishNotifyHubToMavenLocal` and add
+`repositories { mavenLocal() }`, or declare the GitHub Packages repository, since this coordinate is
+**not on Maven Central**; see [README.en.md](../README.en.md#install-the-sdks-package-registries)):
+
+```kotlin
+implementation("io.github.huangwenfu750:sdk-java:0.1.0")
+```
 
 ```java
 try (NotifyClient client = NotifyClient.newBuilder("localhost", 9987).token("ntf_xxx").build()) {

@@ -10,6 +10,12 @@ implementation(project(":sdk-java"))                              // inside this
 implementation("io.github.huangwenfu750:sdk-java:0.1.0")                     // external projects
 ```
 
+> For external projects, pick one: ① run `gradle publishNotifyHubToMavenLocal` in this repo and add
+> `repositories { mavenLocal() }` on the consumer side; ② pull from GitHub Packages — this coordinate
+> is **not on Maven Central**, so `Could not find ... in central` simply means that repository is not
+> declared (reads need a `read:packages` token too). Snippets live in
+> [README.en.md](../../README.en.md#install-the-sdks-package-registries).
+
 ## Usage
 
 ```java

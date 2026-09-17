@@ -9,6 +9,12 @@ implementation(project(":sdk-java"))                              // 仓库内
 implementation("io.github.huangwenfu750:sdk-java:0.1.0")                     // 外部工程
 ```
 
+> 外部工程取包二选一：
+> ① 先在本仓库跑 `gradle publishNotifyHubToMavenLocal`，使用方加 `repositories { mavenLocal() }`；
+> ② 直接拉 GitHub Packages —— 该坐标**不在 Maven Central 上**，报 `Could not find ... in central`
+> 就是没声明那个仓库（读也要带 `read:packages` 的 token），写法见
+> [README.md](../../README.md#安装-sdk包管理平台)。
+
 ## 用法
 
 ```java

@@ -324,7 +324,13 @@ client.close();
 
 ### 5.3 Java
 
-Gradle 依赖（本仓库内可直接 `implementation(project(":sdk-java"))`；外部工程先 `gradle publishNotifyHubToMavenLocal`，再引用 `io.github.huangwenfu750:sdk-java:0.1.0`）：
+Gradle 依赖（本仓库内可直接 `implementation(project(":sdk-java"))`；外部工程二选一：先
+`gradle publishNotifyHubToMavenLocal` 后加 `repositories { mavenLocal() }`，或声明 GitHub Packages
+仓库 —— 该坐标**不在 Maven Central 上**，写法见 [README.md](../README.md#安装-sdk包管理平台)）：
+
+```kotlin
+implementation("io.github.huangwenfu750:sdk-java:0.1.0")
+```
 
 ```java
 try (NotifyClient client = NotifyClient.newBuilder("localhost", 9987).token("ntf_xxx").build()) {
