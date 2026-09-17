@@ -194,6 +194,15 @@ jobs:
             echo "::warning::未配置 CENTRAL_USERNAME / CENTRAL_PASSWORD（Portal User Token），跳过上传"
             exit 0
           fi
+          # Central 不允许覆盖已发布的版本号，重跑同一个版本必然失败。
+          # 先探一下仓库里有没有，有了就当「已发布」跳过，和 npm / PyPI 的处理保持一致。
+          VER="$(sed -n 's/^version *= *"\([^"]*\)".*/\1/p' protos/build.gradle.kts | head -1)"
+          CHK="https://repo1.maven.org/maven2/io/github/huangwenfu750/protos/$VER/"
+          if [ "$(curl -s -o /dev/null -w '%{http_code}' "$CHK")" = "200" ]; then
+            echo "::warning::$VER 已在 Maven Central（$CHK），跳过上传 —— 发新版本前先 bump 版本号"
+            exit 0
+          fi
+          echo "版本号 $VER，Central 上尚未发布，继续上传"
           # 三个坑：
           # 1) 路径是 /api/v1/publisher/upload，不是 v3 —— v3 不存在，POST 过去一律 500 且无响应体
           # 2) 认证是 Authorization: Bearer <base64(用户名:口令)>，不是 HTTP Basic（curl -u）
