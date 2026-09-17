@@ -285,7 +285,45 @@ Maven 坐标是 `io.github.huangwenfu750`（GitHub 用户命名空间，Central 
 1. 用 GitHub 账号登录 [Central Portal](https://central.sonatype.com)，注册命名空间
    `io.github.huangwenfu750`（GitHub 命名空间按页面提示建一个指定名称的临时 public 仓库即完成校验）。
 2. 生成 Portal 的 User Token（用户名 / 密码两段），只用于上传。
-3. 准备 GPG 密钥并把公钥传到 keyserver —— Central 用它校验 `.asc`。
+3. 准备 GPG 密钥，把**公钥**传到 keyserver —— Central 从那里取公钥校验 `.asc`。
+
+#### GPG 密钥：三步
+
+```bash
+# 1) 生成。sign-only、永不过期，且只有主密钥、不带子密钥 ——
+#    Maven / Nexus 只会用主密钥验签；带子密钥时 gpg 会改用子密钥签，Central 校验必失败
+gpg --batch --passphrase '<口令>' --quick-generate-key \
+    "NotifyHub <huangwenfu750@users.noreply.github.com>" rsa4096 sign never
+
+# 2) 记下 <KEYID>（sec 行 rsa4096 后面那串），把公钥传上去
+gpg --list-secret-keys --keyid-format=long
+gpg --keyserver keyserver.ubuntu.com --send-keys <KEYID>
+gpg --keyserver keys.openpgp.org     --send-keys <KEYID>   # 可选，多一路更快同步
+
+# 3) 导出私钥：整段（含 BEGIN / END 两行）填进 Secret MAVEN_SIGNING_KEY
+gpg --batch --yes --pinentry-mode loopback --passphrase '<口令>' \
+    --armor --export-secret-keys '<KEYID>!' > private-key.asc
+```
+
+要点：
+
+- `<KEYID>!` 的感叹号表示只导出这一个密钥，不带子密钥。
+- `MAVEN_SIGNING_PASSWORD` 填第 1 步的口令；私钥没设口令就留空（不推荐）。
+- 密钥到期后续了期，要**再 send-keys 一次**，否则 Central 拿到的还是旧公钥。
+- `private-key.asc` 千万别提交：仓库 `.gitignore` 已排除 `*.asc`。
+
+#### 需要的 Secrets
+
+| Secret | 填什么 | 用途 |
+|---|---|---|
+| `NPM_TOKEN` | npmjs.com 的 token | 发 npm 包 |
+| `PYPI_API_TOKEN` | PyPI 的 API token | 发 PyPI 包 |
+| `GO_TAG_TOKEN` | PAT（Contents: Read and write） | 建 `sdks/go/v*` 标签；`GITHUB_TOKEN` 打 git refs 会被 403 |
+| `MAVEN_SIGNING_KEY` | `private-key.asc` 全文 | GPG 签名（Central 强制） |
+| `MAVEN_SIGNING_PASSWORD` | 私钥口令（无口令则留空） | GPG 签名 |
+| `CENTRAL_USERNAME` / `CENTRAL_PASSWORD` | Portal User Token 的两段 | 上传 bundle 到 Central |
+
+`GITHUB_TOKEN` 是内置的，不用自己配。
 
 打包（Portal 要求一次提交完整的 deployment，所以先落到本地目录再整体上传）：
 

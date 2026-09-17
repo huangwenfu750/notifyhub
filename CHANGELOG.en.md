@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+
+- Docs: the Maven Central section now spells out the full GPG procedure (generate a primary key only
+  → send the public key to a keyserver → export the private key into a secret), plus a table of
+  every secret the release pipelines need
+- `.gitignore` excludes `*.asc` so an exported GPG private key can never be committed by accident
+
 ## [0.1.1] - 2026-09-17
 
 ### Added

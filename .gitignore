@@ -15,6 +15,9 @@ __pycache__/
 *.egg-info/
 .venv/
 
+# GPG 私钥导出物（发 Maven Central 用的 private-key.asc，绝不入库）
+*.asc
+
 # Go
 # 注意：sdks/go/gen/ 的 grpc stub 必须入库。Go 模块是按 tag 从仓库直接取源码的，
 # 不入库的话 go get 拿到的模块会缺 gen/notify/v1 包而编译失败（v0.1.0 就踩过这个坑）。

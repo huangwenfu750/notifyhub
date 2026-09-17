@@ -296,7 +296,50 @@ account):
    register the namespace `io.github.huangwenfu750` (GitHub namespaces are verified by creating a
    temporary public repo with the name shown on the page).
 2. Generate a Portal User Token (username / password pair) — used for uploads only.
-3. Prepare a GPG key and publish the public key to a keyserver; Central verifies `.asc` against it.
+3. Prepare a GPG key and upload the **public** key to a keyserver — Central fetches it there to
+   verify `.asc`.
+
+#### GPG key in three steps
+
+```bash
+# 1) Generate: sign-only, never expires, primary key only (no subkey) —
+#    Maven/Nexus verify with the primary key; if a signing subkey exists gpg signs with it
+#    and Central rejects the bundle
+gpg --batch --passphrase '<passphrase>' --quick-generate-key \
+    "NotifyHub <huangwenfu750@users.noreply.github.com>" rsa4096 sign never
+
+# 2) Note the <KEYID> (the string after rsa4096 on the sec line) and send the public key
+gpg --list-secret-keys --keyid-format=long
+gpg --keyserver keyserver.ubuntu.com --send-keys <KEYID>
+gpg --keyserver keys.openpgp.org     --send-keys <KEYID>   # optional, syncs faster
+
+# 3) Export the private key; paste the whole block (including BEGIN/END lines) into
+#    the MAVEN_SIGNING_KEY secret
+gpg --batch --yes --pinentry-mode loopback --passphrase '<passphrase>' \
+    --armor --export-secret-keys '<KEYID>!' > private-key.asc
+```
+
+Notes:
+
+- The trailing `!` in `<KEYID>!` exports just that key, without subkeys.
+- `MAVEN_SIGNING_PASSWORD` is the passphrase from step 1; leave it empty only if the key has none
+  (not recommended).
+- After extending an expired key, **send the public key again** — otherwise Central still holds the
+  old one.
+- Never commit `private-key.asc`; the repo's `.gitignore` already excludes `*.asc`.
+
+#### Secrets you need
+
+| Secret | Value | Purpose |
+|---|---|---|
+| `NPM_TOKEN` | npmjs.com token | publish to npm |
+| `PYPI_API_TOKEN` | PyPI API token | publish to PyPI |
+| `GO_TAG_TOKEN` | PAT (Contents: Read and write) | create `sdks/go/v*` tags — `GITHUB_TOKEN` gets 403 on git refs |
+| `MAVEN_SIGNING_KEY` | full contents of `private-key.asc` | GPG signing (required by Central) |
+| `MAVEN_SIGNING_PASSWORD` | key passphrase (empty if none) | GPG signing |
+| `CENTRAL_USERNAME` / `CENTRAL_PASSWORD` | the two halves of the Portal User Token | upload the bundle |
+
+`GITHUB_TOKEN` is built in — you do not configure it.
 
 Build the bundle (the Portal requires one complete deployment per upload, so publish to a local
 directory first and zip it up):
