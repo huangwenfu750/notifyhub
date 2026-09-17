@@ -19,6 +19,11 @@ Issues = "https://github.com/huangwenfu750/notifyhub/issues"
 [project.optional-dependencies]
 dev = ["grpcio-tools>=1.60"]
 
+# 让打出的 sdist / wheel 里带上许可证文件
+# （setuptools>=77 会默认收，这里显式声明以兼容 pyproject 里写的 setuptools>=68）
+[tool.setuptools]
+license-files = ["LICENSE"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

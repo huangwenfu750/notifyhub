@@ -38,6 +38,12 @@ jobs:
       - name: 校验 proto 副本与主契约一致
         run: diff proto/notify/v1/notify.proto sdks/typescript/proto/notify/v1/notify.proto
 
+      # npm / PyPI 的包里要带许可证，所以两个 SDK 各存一份副本
+      - name: 校验许可证副本一致
+        run: |
+          diff LICENSE sdks/typescript/LICENSE
+          diff LICENSE sdks/python/LICENSE
+
       # 版本号散在 10 处，漏改一处就会出现「包是新版、服务端报旧版」
       - name: 校验版本号一致
         run: python scripts/check-versions.py
