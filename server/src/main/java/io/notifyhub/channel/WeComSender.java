@@ -31,7 +31,9 @@ public final class WeComSender implements ChannelSender {
     @Override
     public SendResult send(PlatformConf conf, Message msg, String rendered) {
         Map<String, Object> markdown = new LinkedHashMap<>();
-        markdown.put("content", Texts.truncate(rendered, MAX_CONTENT));
+        // template 未配置时 TemplateRenderer 返回 null，回退到默认格式，避免发出空消息
+        String text = rendered != null ? rendered : Texts.renderOr(conf, msg);
+        markdown.put("content", Texts.truncate(text, MAX_CONTENT));
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("msgtype", "markdown");

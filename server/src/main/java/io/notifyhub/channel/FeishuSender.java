@@ -38,7 +38,9 @@ public final class FeishuSender implements ChannelSender {
         }
         body.put("msg_type", "text");
         Map<String, Object> content = new LinkedHashMap<>();
-        content.put("text", Texts.truncate(rendered, MAX_TEXT));
+        // template 未配置时 TemplateRenderer 返回 null，回退到默认格式，避免发出空消息
+        String text = rendered != null ? rendered : Texts.renderOr(conf, msg);
+        content.put("text", Texts.truncate(text, MAX_TEXT));
         body.put("content", content);
 
         SendResult r = poster.postJson(conf.webhook(), body, Map.of());
