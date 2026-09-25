@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      // 与主站一致：首屏前定好主题，避免闪色
+      (function () {
+        try {
+          var m = localStorage.getItem('notifyhub-site-theme') || 'system';
+          var dark =
+            m === 'dark' ||
+            (m === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        } catch (e) {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>404 · NotifyHub</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <style>
+      :root,
+      :root[data-theme='dark'] {
+        --bg: #0b1020;
+        --text: #e8edf7;
+        --muted: #98a4bd;
+        --brand: #41d1a5;
+        --title-grad: linear-gradient(96deg, #ffffff 20%, #a9f5dc 100%);
+      }
+      :root[data-theme='light'] {
+        --bg: #ffffff;
+        --text: #131c2e;
+        --muted: #56637a;
+        --brand: #0f9b76;
+        --title-grad: linear-gradient(96deg, #0f172a 20%, #0f9b76 100%);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", Helvetica, Arial, sans-serif;
+        text-align: center;
+        padding: 24px;
+      }
+      code {
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+      }
+      .code {
+        font-size: 64px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        background: var(--title-grad);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      h1 {
+        margin: 14px 0 10px;
+        font-size: 22px;
+        font-weight: 600;
+      }
+      p {
+        margin: 0 0 26px;
+        color: var(--muted);
+        font-size: 15px;
+      }
+      a {
+        display: inline-block;
+        height: 44px;
+        line-height: 44px;
+        padding: 0 22px;
+        border-radius: 999px;
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 15px;
+        background: linear-gradient(120deg, var(--brand), #35b3ff);
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <div class="code">404</div>
+      <h1>页面不存在</h1>
+      <p>这个地址没有内容，回首页看看 NotifyHub 能做什么。</p>
+      <a href="./index.html">返回首页</a>
+    </div>
+  </body>
+</html>

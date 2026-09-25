@@ -1,0 +1,22 @@
+{
+  "name": "notifyhub-site",
+  "private": true,
+  "version": "0.1.1",
+  "type": "module",
+  "description": "NotifyHub 项目介绍站点（Vue 3 + Vite，静态产物可直接部署到 GitHub Pages）",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173"
+  },
+  "dependencies": {
+    "gsap": "^3.15.0",
+    "leafer-ui": "^2.2.11",
+    "three": "^0.186.0",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.0.7"
+  }
+}
